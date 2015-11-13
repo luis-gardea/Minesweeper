@@ -1,222 +1,200 @@
-#NOTE: THIS CODE IS TAKEN DIRECTLY FROM https://gist.github.com/mohd-akram/3057736, 
-#with a few edits
-
-
+from random import randint
 import random
-import re
-import time
-from string import ascii_lowercase
 
+class Square(object):
+    isUncovered = False
+    value = 0
 
-def setupgrid(gridsize, start, numberofmines):
-    emptygrid = [['0' for i in range(gridsize)] for i in range(gridsize)]
+    def __init__(self):
 
-    mines = getmines(emptygrid, start, numberofmines)
+        
+class MineSweeper(object):
+    board = []  
+    row_size = 0
+    column_size = 0
+    bomb_number = 0
+    bomb_value = 9
+    covered_value = 10
+    gameEnd = False
+    score = 0
+    frontier = []
 
-    for i, j in mines:
-        emptygrid[i][j] = 'X'
+    #Initiliaze game
+    def __init__(self, row, column, difficulty):
 
-    grid = getnumbers(emptygrid)
-
-    return (grid, mines)
-
-
-def showgrid(grid):
-    gridsize = len(grid)
-
-    horizontal = '   ' + (4 * gridsize * '-') + '-'
-
-    # Print top column letters
-    toplabel = '     '
-
-    for i in ascii_lowercase[:gridsize]:
-        toplabel = toplabel + i + '   '
-
-    print(toplabel + '\n' + horizontal)
-
-    # Print left row numbers
-    for idx, i in enumerate(grid):
-        row = '{0:2} |'.format(idx + 1)
-
-        for j in i:
-            row = row + ' ' + j + ' |'
-
-        print(row + '\n' + horizontal)
-
-    print('')
-
-
-def getrandomcell(grid):
-    gridsize = len(grid)
-
-    a = random.randint(0, gridsize - 1)
-    b = random.randint(0, gridsize - 1)
-
-    return (a, b)
-
-
-def getneighbors(grid, rowno, colno):
-    gridsize = len(grid)
-    neighbors = []
-
-    for i in range(-1, 2):
-        for j in range(-1, 2):
-            if i == 0 and j == 0:
-                continue
-            elif -1 < (rowno + i) < gridsize and -1 < (colno + j) < gridsize:
-                neighbors.append((rowno + i, colno + j))
-
-    return neighbors
-
-
-def getmines(grid, start, numberofmines):
-    mines = []
-    neighbors = getneighbors(grid, *start)
-
-    for i in range(numberofmines):
-        cell = getrandomcell(grid)
-        while cell == start or cell in mines or cell in neighbors:
-            cell = getrandomcell(grid)
-        mines.append(cell)
-
-    return mines
-
-
-def getnumbers(grid):
-    for rowno, row in enumerate(grid):
-        for colno, cell in enumerate(row):
-            if cell != 'X':
-                # Gets the values of the neighbors
-                values = [grid[r][c] for r, c in getneighbors(grid,
-                                                              rowno, colno)]
-
-                # Counts how many are mines
-                grid[rowno][colno] = str(values.count('X'))
-
-    return grid
-
-
-def showcells(grid, currgrid, rowno, colno):
-    # Exit function if the cell was already shown
-    if currgrid[rowno][colno] != ' ':
-        return
-
-    # Show current cell
-    currgrid[rowno][colno] = grid[rowno][colno]
-
-    # Get the neighbors if the cell is empty
-    if grid[rowno][colno] == '0':
-        for r, c in getneighbors(grid, rowno, colno):
-            # Repeat function for each neighbor that doesn't have a flag
-            if currgrid[r][c] != 'F':
-                showcells(grid, currgrid, r, c)
-
-
-def playagain():
-    choice = raw_input('Play again? (y/n): ')
-
-    return choice.lower() == 'y'
-
-
-def parseinput(inputstring, gridsize, helpmessage):
-    cell = ()
-    flag = False
-    message = "Invalid cell. " + helpmessage
-
-    pattern = r'([a-{}])([0-9]+)(f?)'.format(ascii_lowercase[gridsize - 1])
-    validinput = re.match(pattern, inputstring)
-
-    if inputstring == 'help':
-        message = helpmessage
-
-    elif validinput:
-        rowno = int(validinput.group(2)) - 1
-        colno = ascii_lowercase.index(validinput.group(1))
-        flag = bool(validinput.group(3))
-
-        if -1 < rowno < gridsize:
-            cell = (rowno, colno)
-            message = ''
-
-    return {'cell': cell, 'flag': flag, 'message': message}
-
-
-def playgame():
-    gridsize = 9
-    numberofmines = 10
-
-    currgrid = [[' ' for i in range(gridsize)] for i in range(gridsize)]
-
-    grid = []
-    flags = []
-    starttime = 0
-
-    helpmessage = ("Type the column followed by the row (eg. a5). "
-                   "To put or remove a flag, add 'f' to the cell (eg. a5f).")
-
-    showgrid(currgrid)
-    print(helpmessage + " Type 'help' to show this message again.\n")
-
-    while True:
-        minesleft = numberofmines - len(flags)
-        prompt = raw_input('Enter the cell ({} mines left): '.format(minesleft))
-        result = parseinput(prompt, gridsize, helpmessage + '\n')
-
-        message = result['message']
-        cell = result['cell']
-
-        if cell:
-            print('\n\n')
-            rowno, colno = cell
-            currcell = currgrid[rowno][colno]
-            flag = result['flag']
-
-            if not grid:
-                grid, mines = setupgrid(gridsize, cell, numberofmines)
-            if not starttime:
-                starttime = time.time()
-
-            if flag:
-                # Add a flag if the cell is empty
-                if currcell == ' ':
-                    currgrid[rowno][colno] = 'F'
-                    flags.append(cell)
-                # Remove the flag if there is one
-                elif currcell == 'F':
-                    currgrid[rowno][colno] = ' '
-                    flags.remove(cell)
-                else:
-                    message = 'Cannot put a flag there'
-
-            # If there is a flag there, show a message
-            elif cell in flags:
-                message = 'There is a flag there'
-
-            elif grid[rowno][colno] == 'X':
-                print('Game Over\n')
-                showgrid(grid)
-                if playagain():
-                    playgame()
-                return
-
-            elif currcell == ' ':
-                showcells(grid, currgrid, rowno, colno)
-
+        self.row_size = row
+        self.column_size = column
+        for i in range(row*column):
+            self.board.append(Square())         
+    
+        if difficulty == 1:
+            if row * column < 30:           
+                self.bomb_number = 5                        
+            elif row * column < 100:
+                self.bomb_number = 10           
             else:
-                message = "That cell is already shown"
+                self.bomb_number = 15       
+        elif difficulty == 2:
+            if row * column < 30:
+                self.bomb_number = 10   
+            elif row * column < 100:
+                self.bomb_number = 15   
+            else:
+                self.bomb_number = 20
+        elif difficulty == 3:   
+            if row * column < 30:
+                self.bomb_number = 15
+            elif row * column < 100:
+                self.bomb_number = 20       
+            else:
+                self.bomb_number = 30
+        else:
+            raise Exception("Your level input is wrong!")   
 
-            if set(flags) == set(mines):
-                minutes, seconds = divmod(int(time.time() - starttime), 60)
-                print(
-                    'You Win. '
-                    'It took you {} minutes and {} seconds.\n'.format(minutes,
-                                                                      seconds))
-                showgrid(grid)
-                if playagain():
-                    playgame()
-                return
+        self.insert_mines()
 
-        showgrid(currgrid)
-        print(message)
+    def get_state(self, board):
+        state = []
+        for square_num in self.board:
+            if board[square_num].isUncovered == False:
+                state.append(self.covered_value)
+            else:
+                state.append(square.value)
 
-playgame()
+        return state    
+
+    def get_label(self, frontier):
+        label = []
+        for square_num in range(len(board)):
+            if board[square_num] in frontier:
+                if board[square_num].value != self.bomb_value:
+                    # could add some more check to determine if square is 
+                    # actually a logical choice...
+                    label.append(1)
+                else:
+                    label.append(0)
+            else:
+                label.append(0)
+
+        return label
+
+    def get_frontier(self):
+        return frontier
+
+    def update_frontier(self, square):
+        if self.board[square].isUncovered = False: return
+
+
+
+        if self.board[square].value = 0:
+            neighbors = self.get_neighbors(square)
+
+            # Get the neighbors if the cell is empty
+            for neighbors in self.get_neighbors(square):
+                    # Repeat function for each neighbor that doesn't have a flag
+                    if currgrid[r][c] != 'F':
+                        showcells(grid, currgrid, r, c)
+            else:
+                for r, c in getneighbors(grid, rowno, colno):
+                    # Add neighbors to frontier if not already uncovered
+                    if currgrid[r][c] != ' ':
+                        frontier.append((r,c))
+        else:
+        
+
+
+    def get_init_state(self):
+        state = []
+        for i in range(self.row_size*self.column_size):
+            state.append(covered_value)
+
+        return state;
+
+    # given a move of the board, returns 
+    def update_board(self, move):
+        if(self.board[move].isUncovered) == False:
+            if self.board[self.row_size * (user_row-1) + (user_column-1)].value == self.bomb_value:
+                gameEnd = True
+            else:
+                self.board[move].isUncovered = True
+                score += 5
+                update_frontier(move)
+
+        return self.get_state()
+
+
+    def get_neighbors(self, square):
+        neighborlist = []
+        #except right corner
+        if (square+1) % self.row_size != 0:
+            neighborlist.append(square+1) 
+            neighborlist.append(square+self.row_size+1)
+            neighborlist.append(square-self.row_size+1)
+        #except left corner 
+        if square % self.row_size != 0: 
+            neighborlist.append(square-1)
+            neighborlist.append(square+self.row_size-1)             
+            neighborlist.append(square-self.row_size-1)
+        
+        #all fields
+        neighborlist.append(square+self.row_size)
+        neighborlist.append(square-self.row_size)
+
+        for neighbor in neighborlist:
+            if neighbor < 0 or neighbor >= len(self.board):
+                neighborlist.remove(neighbor)
+
+        return neighborlist
+
+    #Insert specified number of mines into the area, increase numbers of its neigbours.
+    def insert_mines(self):
+        bomb_position = random.sample(range(0, len(self.board)-1), self.bomb_number)
+        
+        for bomb in bomb_position:
+            self.board[bomb].value = self.bomb_value
+
+        for locatedBomb in bomb_position:
+            neigbourlist = self.get_neighbors(locatedBomb)
+            
+            #increase proper neighbours one
+            for neigbour in neigbourlist:
+                if self.board[neigbour].value != self.bomb_value:
+                    self.board[neigbour].value += 1
+
+#Testing class
+num_games = 1000
+X = []
+Y = []
+
+print "Welcome to minesweeper game!"
+row = 8
+column = 8
+difficulty= 1
+print "Playing %d x %d board on difficulty %d" % row, column, difficulty
+
+for i in range(num_games):
+    try:
+        game= MineSweeper(row, column, difficulty)
+        #state = game.get_init_state()
+        move = randint(0, len(game.board)-1)
+        while game.gameEnd == False:
+            #move the game one step foward using a selected move
+            state = game.update_board(move)
+            label = game.get_label()
+
+            #add the new state of the board and the label corresponding to 
+            #correct next moves to training data set
+            X.append(state)
+            Y.append(label)
+
+            #choose a random next move that does not lead to a game end
+            choices = game.get_frontier()
+            move = randint(0, len(choices)-1)
+            while choices[move] != game.bomb_value:
+                move = randint(0, len(game.board)-1)
+            
+            
+
+
+    except Exception as e:
+        print e
