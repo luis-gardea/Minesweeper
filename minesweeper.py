@@ -81,44 +81,40 @@ class MineSweeper(object):
     def get_frontier(self):
         return frontier
 
-    def update_frontier(self, square):
-        if self.board[square].isUncovered = False: return
+    def update_board(self, square):
+        if self.board[square].isUncovered == True:
+            return
 
+        if square in self.frontier:
+            self.frontier.remove(square)
 
+        self.board[square].isUncovered = True
 
-        if self.board[square].value = 0:
-            neighbors = self.get_neighbors(square)
-
+        if self.board[square].value == 0:
             # Get the neighbors if the cell is empty
-            for neighbors in self.get_neighbors(square):
-                    # Repeat function for each neighbor that doesn't have a flag
-                    if currgrid[r][c] != 'F':
-                        showcells(grid, currgrid, r, c)
-            else:
-                for r, c in getneighbors(grid, rowno, colno):
-                    # Add neighbors to frontier if not already uncovered
-                    if currgrid[r][c] != ' ':
-                        frontier.append((r,c))
+            for next_move in self.get_neighbors(square):
+                self.update_frontier(next_move)
         else:
-        
-
+            for neighbor in self.get_neighbors(square):
+                # Add neighbors to frontier if not already uncovered and not already in frontier
+                if self.board[neighbor].isUncovered == False and neighbor not in self.frontier:
+                    frontier.append(neighbor)
 
     def get_init_state(self):
         state = []
         for i in range(self.row_size*self.column_size):
             state.append(covered_value)
 
-        return state;
+        return state
 
-    # given a move of the board, returns 
-    def update_board(self, move):
+    # given a move of the board, returns updated game state
+    def get_next_state(self, move):
         if(self.board[move].isUncovered) == False:
             if self.board[self.row_size * (user_row-1) + (user_column-1)].value == self.bomb_value:
-                gameEnd = True
+                self.gameEnd = True
             else:
-                self.board[move].isUncovered = True
                 score += 5
-                update_frontier(move)
+                self.update_board(move)
 
         return self.get_state()
 
@@ -179,7 +175,7 @@ for i in range(num_games):
         move = randint(0, len(game.board)-1)
         while game.gameEnd == False:
             #move the game one step foward using a selected move
-            state = game.update_board(move)
+            state = game.get_next_state(move)
             label = game.get_label()
 
             #add the new state of the board and the label corresponding to 
@@ -193,8 +189,5 @@ for i in range(num_games):
             while choices[move] != game.bomb_value:
                 move = randint(0, len(game.board)-1)
             
-            
-
-
     except Exception as e:
         print e
