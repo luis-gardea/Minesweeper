@@ -1,5 +1,6 @@
 from random import randint
 import random
+import numpy as np
 
 # Class: Square
 # Helper class designed to make it easy to implement a board with 
@@ -46,17 +47,22 @@ class MineSweeper(object):
     gameEnd = False
 
     score = 0
+    gameWon = False
+
+    verbose = False
     
     # Initiliaze game
     #
     # sets up self.board by appending Squares. Adds bombs according to difficulty 
     # and sets the value of each square by calling insert_mines()
-    def __init__(self, row, column, difficulty):
+    def __init__(self, row=4, column=4, difficulty=1, verbose=False):
         self.row_size = row
         self.column_size = column
 
         self.board = []
         self.frontier = []
+
+        self.verbose = verbose
 
         for i in range(row*column):
             self.board.append(Square(i))         
@@ -86,6 +92,10 @@ class MineSweeper(object):
             raise Exception("Your level input is wrong!")   
 
         self.insert_mines()
+
+        if verbose:
+            print "Playing on %d x %d board with difficulty %d" % \
+                (row, column, difficulty)
 
     # returns a vector of the current state of the board values (not Squares). If 
     # a Square is covered, the state vecotr state represents this with self.covered_value. 
@@ -169,6 +179,7 @@ class MineSweeper(object):
         return state
 
     # Given a move of the board, returns updated game state
+    # move is a integer, not a Square. Makes for an easier interface
     # If a move uncovers a bomb, game is over. Otherwise, update board with given move
     # Note: A move given by a player corresponding to an already uncovered square does nothing
     def get_next_state(self, move):
@@ -183,10 +194,15 @@ class MineSweeper(object):
         # if all non-bomb squares have been uncovered, game is won
         if self.num_uncovered == self.row_size*self.column_size - self.bomb_number:
             self.gameEnd = True
+            self.gameWon = True
+
+        if self.verbose:
+            print self.get_state()
+            print self.get_label()
 
         return self.get_state()
 
-    # Key function for actually determining the topology of the square (i.e. how we
+    # Key function for actually determining the topology of the board (i.e. how we
     # go from a list to a square board). Basically just use the dimensions of the board
     # to get the possible neighbors and append them to list. Then, remove any invalid squares
     # from the list. Also some code to handle cases where the square is on the border
@@ -230,4 +246,66 @@ class MineSweeper(object):
             for neigbour in neigbourlist:
                 if neigbour.value != self.bomb_value:
                     neigbour.value += 1
-                    
+
+    #always choose a corner for the first move. (kind of cheating)
+    def first_move(self, corner):
+        return {
+            0: 0,
+            1: self.row_size - 1,
+            2: self.row_size*self.column_size - 1 - self.row_size - 1,
+            3: self.row_size*self.column_size - 1,
+        }.get(corner, 0)
+
+def generate_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_data = False):
+    X = []
+    Y = []
+
+    for i in range(num_simulations):
+        game = MineSweeper(row, column, difficulty)
+
+        # Pick the first move to be a corner
+        #corner = randint(0, 3)
+        #move = game.first_move(corner)
+        move = randint(0, len(game.board)-1)
+        while game.board[move].value == game.bomb_value:
+            move = randint(0, len(game.board)-1)
+
+        # Update the board with the first move
+        state = game.get_next_state(move)
+        label = game.get_label()
+
+        # Play game to completion
+        while not game.gameEnd:
+            # add the new state of the board and the label corresponding to 
+            # correct next moves to training data set
+            X.append(state)
+            Y.append(label)
+
+            # choose a random next move that does not lead to a game end
+            choices = game.get_frontier()
+            randomOrdering = random.sample(range(len(choices)), len(choices))
+            move = None
+            for choice in randomOrdering:
+                move = choices[choice]
+                if game.board[move].value != game.bomb_value:
+                    break
+
+            # If there are no valid moves in the frontier, choose a random move from the entire board
+            if game.board[move].value == game.bomb_value:
+                move = randint(0, len(game.board)-1)
+                while game.board[move].value == game.bomb_value or game.board[move].isUncovered:
+                    move = randint(0, len(game.board)-1)
+
+            # move the game one step foward using the selected move
+            state = game.get_next_state(move)
+            label = game.get_label()
+
+    X = np.array(X, 'float')
+    Y = np.array(Y, 'float')
+
+    if save_data:
+        # Save numpay array data and labels
+        np.save('train_data', X)
+        np.save('train_labels', Y)
+
+    return X, Y
