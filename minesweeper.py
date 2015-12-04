@@ -15,9 +15,10 @@ import numpy as np
 # Note: Most of the implementation of the MineSweeper class deals directly
 # with Sqaure objects. Only the get_neighbors funtion uses the location
 class Square(object):
-    location = 0
+    location = (0, 0)
     isUncovered = False
     value = 0
+
 
     def __init__(self, location):
         self.location = location
@@ -64,8 +65,10 @@ class MineSweeper(object):
 
         self.verbose = verbose
 
-        for i in range(row*column):
-            self.board.append(Square(i))         
+        for row in range(row):
+            self.board.append([])
+            for col in range(column):
+                self.board[row].append(Square((row, col)))         
     
         if difficulty == 1:
             if row * column < 30:           
@@ -98,18 +101,20 @@ class MineSweeper(object):
                 (row, column, difficulty)
 
     # returns a vector of the current state of the board values (not Squares). If 
-    # a Square is covered, the state vecotr state represents this with self.covered_value. 
+    # a Square is covered, the state vector state represents this with self.covered_value. 
     # Otherwise the Square is uncovered and the value of the square is used. Note that 
     # self.bomb_value should never appear in the state vector because all bombs should be covered
     # or the game should end.
     def get_state(self):
         state = []
-        for square in self.board:
-            if square.isUncovered == False:
-                state.append(self.covered_value)
-            else:
-                state.append(square.value)
-
+        for row in range(self.row_size):
+            for col in range(self.column_size):
+                square = self.board[row][col]
+                if square.isUncovered == False:
+                    state.append(self.covered_value)
+                else:
+                    state.append(square.value)
+        print state
         return state    
 
     # For the current state of the board, returns a labeling. 
@@ -117,16 +122,18 @@ class MineSweeper(object):
     # a correct action given the given state is 1, and all other actions as 0.
     def get_label(self):
         label = []
-        for square in self.board:
-            if square in self.frontier:
-                if square.value != self.bomb_value:
-                    # could add some more check to determine if square is 
-                    # actually a logical choice... + some probability
-                    label.append(1)
+        for row in range(self.row_size):
+            for col in range(self.column_size):
+                square = self.board[row][col]
+                if square in self.frontier:
+                    if square.value != self.bomb_value:
+                        # could add some more check to determine if square is 
+                        # actually a logical choice... + some probability
+                        label.append(1)
+                    else:
+                        label.append(0)
                 else:
                     label.append(0)
-            else:
-                label.append(0)
 
         return label
 
@@ -135,10 +142,7 @@ class MineSweeper(object):
     # square. Keeping track of the current frontier makes it easier to create the label
     # and choose a next move (Any square not in the frontier shouldn't be a valid move)
     def get_frontier(self):
-        frontierLocations = []
-        for square in self.frontier:
-            frontierLocations.append(square.location)
-        return frontierLocations
+        return self.frontier
 
     # Recursive function called to update the current state 
     # of self.board whenever a move is made. Uncovers the current square, as well
@@ -161,12 +165,12 @@ class MineSweeper(object):
         # Recursive case: uncover all neighbors
         if square.value == 0:
             # Get the neighbors if the square.value is 0
-            for neighbor in self.get_neighbors(square):
+            for neighbor in self.get_neighbors(square).values():
                 self.update_board(neighbor)
         # We are not going to uncover this square, so we need to update self.frontier by
         # adding all the neighbors of the current square if not already in self.frontier
         else:
-            for neighbor in self.get_neighbors(square):
+            for neighbor in self.get_neighbors(square).values():
                 # Add neighbors to frontier if not already uncovered and not already in frontier
                 if neighbor.isUncovered == False and neighbor not in self.frontier:
                     self.frontier.append(neighbor)
@@ -182,9 +186,8 @@ class MineSweeper(object):
     # move is a integer, not a Square. Makes for an easier interface
     # If a move uncovers a bomb, game is over. Otherwise, update board with given move
     # Note: A move given by a player corresponding to an already uncovered square does nothing
-    def get_next_state(self, move):
-        square = self.board[move]
-        if square.isUncovered == False:
+    def get_next_state(self, square):
+        if not square.isUncovered:
             if square.value == self.bomb_value:
                 self.gameEnd = True
             else:
@@ -208,42 +211,56 @@ class MineSweeper(object):
     # from the list. Also some code to handle cases where the square is on the border
     def get_neighbors(self, square):
         location = square.location
-        allneighborlist = []
-        neighborlist = []
-        #except right corner
-        if (location+1) % self.row_size != 0:
-            allneighborlist.append(location+1) 
-            allneighborlist.append(location+self.row_size+1)
-            allneighborlist.append(location-self.row_size+1)
-        #except left corner 
-        if location % self.row_size != 0: 
-            allneighborlist.append(location-1)
-            allneighborlist.append(location+self.row_size-1)             
-            allneighborlist.append(location-self.row_size-1)
+        neighbors = {}
+        i = 0
+        for row in range(location[0]-1, location[0]+2):
+            for col in range(location[1]-1, location[1]+2):
+                if row == location[0] and col == location[1]:
+                    continue
+                if row >= 0 and row < self.row_size and col >= 0 and col < self.column_size:
+                    neighbors[i] = self.board[row][col]
+                i = i+1
+        #print neighbors
+        return neighbors
+        # allneighborlist = []
+        # neighborlist = []
+        # #except right corner
+        # if (location+1) % self.row_size != 0:
+        #     allneighborlist.append(location+1) 
+        #     allneighborlist.append(location+self.row_size+1)
+        #     allneighborlist.append(location-self.row_size+1)
+        # #except left corner 
+        # if location % self.row_size != 0: 
+        #     allneighborlist.append(location-1)
+        #     allneighborlist.append(location+self.row_size-1)             
+        #     allneighborlist.append(location-self.row_size-1)
         
-        #all fields
-        allneighborlist.append(location+self.row_size)
-        allneighborlist.append(location-self.row_size)
+        # #all fields
+        # allneighborlist.append(location+self.row_size)
+        # allneighborlist.append(location-self.row_size)
 
-        for neighbor in allneighborlist:
-            if neighbor >= 0 and neighbor < len(self.board):
-                neighborlist.append(self.board[neighbor])
+        # for neighbor in allneighborlist:
+        #     if neighbor >= 0 and neighbor < len(self.board):
+        #         neighborlist.append(self.board[neighbor])
 
-        return neighborlist
+        # return neighborlist
+
+
 
     #Insert specified number of mines into the area, increase numbers of its neigbours.
     def insert_mines(self):
-        bomb_positions = random.sample(range(0, len(self.board)-1), self.bomb_number)
+        bombs = random.sample(range(0, self.row_size*self.column_size), self.bomb_number)
+        bomb_positions = [(bomb/self.row_size, bomb % self.row_size) for bomb in bombs]
         
         for bomb in bomb_positions:
-            self.board[bomb].value = self.bomb_value
+            self.board[bomb[0]][bomb[1]].value = self.bomb_value
 
         for bomb_position in bomb_positions:
-            bomb = self.board[bomb_position]
+            bomb = self.board[bomb_position[0]][bomb_position[1]]
             neigbourlist = self.get_neighbors(bomb)
             
             #increase proper neighbours one
-            for neigbour in neigbourlist:
+            for neigbour in neigbourlist.values():
                 if neigbour.value != self.bomb_value:
                     neigbour.value += 1
 
@@ -256,7 +273,16 @@ class MineSweeper(object):
             3: self.row_size*self.column_size - 1,
         }.get(corner, 0)
 
-def generate_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_data = False):
+    # User interface: return whether move will lead to a bomb
+    def is_bomb(self, square):
+        return square.value == self.bomb_value
+
+    def get_square(self, location):
+        return self.board[location[0]][location[1]]
+
+
+
+def generate_global_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_data = False):
     X = []
     Y = []
 
@@ -266,8 +292,67 @@ def generate_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_d
         # Pick the first move to be a corner
         #corner = randint(0, 3)
         #move = game.first_move(corner)
-        move = randint(0, len(game.board)-1)
-        while game.board[move].value == game.bomb_value:
+
+        # Pick first move randomly
+        move = game.get_square((randint(0, game.row_size-1), randint(0, game.column_size-1)))
+        while game.is_bomb(move):
+            move = game.get_square((randint(0, game.row_size-1), randint(0, game.column_size-1)))
+
+        # Update the board with the first move
+        state = game.get_next_state(move)
+        label = game.get_label()
+
+        # Play game to completion
+        while not game.gameEnd:
+            # add the new state of the board and the label corresponding to 
+            # correct next moves to training data set
+            X.append(state)
+            Y.append(label)
+
+            # choose a random next move in frontier that does not lead to a game end
+            choices = game.get_frontier()
+            randomOrdering = random.sample(range(len(choices)), len(choices))
+            move = None
+            for choice in randomOrdering:
+                move = choices[choice]
+                if not game.is_bomb(move):
+                    break
+
+            # If there are no valid moves in the frontier, choose a random move from the entire board
+            if game.is_bomb(move):
+                move = game.get_square((randint(0, game.row_size-1), randint(0, game.column_size-1)))
+                while game.is_bomb(move) or move.isUncovered:
+                    move = game.get_square((randint(0, game.row_size-1), randint(0, game.column_size-1)))
+
+            # move the game one step foward using the selected move
+            state = game.get_next_state(move)
+            label = game.get_label()
+
+    X = np.array(X, 'float')
+    Y = np.array(Y, 'float')
+
+    if save_data:
+        # Save numpay array data and labels
+        np.save('train_data', X)
+        np.save('train_labels', Y)
+
+    return X, Y
+
+def generate_local_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_data = False):
+    X = []
+    Y = []
+
+    for i in range(num_simulations):
+        game = MineSweeper(row, column, difficulty)
+
+        # Pick the first move to be a corner
+        #corner = randint(0, 3)
+        #move = game.first_move(corner)
+
+        # Pick first move randomly
+        location = (randint(0, game.row_size), randint(0, game.row_size))
+        move = game.get_square(location)
+        while game.is_bomb(move):
             move = randint(0, len(game.board)-1)
 
         # Update the board with the first move
@@ -281,19 +366,21 @@ def generate_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_d
             X.append(state)
             Y.append(label)
 
-            # choose a random next move that does not lead to a game end
+            # choose a random next move in frontier that does not lead to a game end
             choices = game.get_frontier()
+
             randomOrdering = random.sample(range(len(choices)), len(choices))
             move = None
             for choice in randomOrdering:
                 move = choices[choice]
-                if game.board[move].value != game.bomb_value:
+                if not game.is_bomb(move):
                     break
 
             # If there are no valid moves in the frontier, choose a random move from the entire board
-            if game.board[move].value == game.bomb_value:
-                move = randint(0, len(game.board)-1)
-                while game.board[move].value == game.bomb_value or game.board[move].isUncovered:
+            if game.is_bomb(move):
+                location = (randint(0, game.row_size), randint(0, game.row_size))
+                move = game.get_square(location)
+                while game.is_bomb(move) or game.isUncovered(move):
                     move = randint(0, len(game.board)-1)
 
             # move the game one step foward using the selected move

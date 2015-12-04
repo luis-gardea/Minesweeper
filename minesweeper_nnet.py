@@ -8,8 +8,8 @@ from random import randint
 row = 8
 col = 8
 dif = 1
-X_train, Y_train = minesweeper.generate_data(300, row, col, dif)
-X_test, Y_test = minesweeper.generate_data(100, row, col, dif)
+X_train, Y_train = minesweeper.generate_global_data(300, row, col, dif)
+X_test, Y_test = minesweeper.generate_global_data(100, row, col, dif)
 
 ##########################################################################################
 # Set up the network and train it
