@@ -57,6 +57,7 @@ class Contraint(object):
 	def getConstant(self):
 		if self.constant < 0:
 			raise Exception('Bad constant')
+		return self.constant
 
 	def isEmpty(self):
 		return self.constant <= 0
@@ -65,12 +66,18 @@ class Contraint(object):
 		self.current_constant = 0
 		self.unassigned = 0
 		self.next_unassigned = None
-		for i in range(self.nvariables):
-	    	if self.variables[i].testAssignment < 0:
-				self.next_unassigned = self.variables[i]
+		for var in self.variables:
+			if var.testAssignment < 0:
+				self.next_unassigned = var
 				self.unassigned += 1
-	    	elif self.variables[i].testAssignment >= 1:
+	    	else var.testAssignment >= 1:
 				self.current_constant += 1
+		# for i in range(self.nvariables):
+	 #    	if self.variables[i].testAssignment < 0:
+		# 		self.next_unassigned = self.variables[i]
+		# 		self.unassigned += 1
+	 #    	elif self.variables[i].testAssignment >= 1:
+		# 		self.current_constant += 1
 
     def isSatisfied(self):
 		if self.current_constant > self.constant:
@@ -94,16 +101,16 @@ class Contraint(object):
 
 	def updateAndRemoveKnownvariables(self, map):
 		# first check for previously known values
-		for i in reversed(range(nvariables)): #(int i=nvariables-1; i>=0; --i) {
-	    	s = self.variables[i].getState()
+		for var in reversed(self.variables):
+	    	s = var.getState()
 	    	if s >= 0:
 				# clear (remove variable)
 				self.nvariables -= 1
-				del self.variables[i]
+				self.variables.remove(var)
 	    	elif s == BoardPosition.MARKED:
 				# marked (remove variable and decrement constant)
 				self.nvariables -= 1
-				del self.variables[i]
+				self.variables.remove(var)
 				self.constant -= 1
 
 		# if no variables left, return
@@ -114,13 +121,13 @@ class Contraint(object):
 		result = []
 		if self.constant == 0:
 	    	# all variables are 0 (no mines)
-	    	for i in range(nvariables):
-				self.variables[i].probe(map)
-				result.append(variables[i].newConstraint())
+	    	for var in self.variables:
+				var.probe(map)
+				result.append(var.newConstraint())
 		elif self.constant == self.nvariables:
 	    	# all variables are 1 (are mines)
-	    	for i in range(nvariables):
-				self.variables[i].mark(map)
+	    	for var in self.variables:
+				var.mark(map)
 		else 
 	    	return None
 
