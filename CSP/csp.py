@@ -6,9 +6,9 @@ MARKED = -3
 CLEAR = 0
 
 class CSPSquare(object):
-	def __init__(self, x,y, board):
+	def __init__(self, x,y, csp):
 		self.state = UNKNOWN
-		self.board = board
+		self.csp = csp
 		self.boundary_level = 0
 		# x and y coordinates of this position
 		self.x = x
@@ -35,7 +35,7 @@ class CSPSquare(object):
 			return None
 		c = Constraint()
 		constant = self.state
-		board = self.board
+		board = self.csp.board
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < 0:
@@ -48,13 +48,53 @@ class CSPSquare(object):
 		return c
 
 	def neighborsKnownOrInSet(self,variables,nvariables):
-		board = self.board 
+		board = self.csp.board 
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < MARKED:
 					found == False
 					for k in range(nvariables):
-						if board[i][j]
+						if board[i][j] == variables[k]:
+							found = True
+							break
+					if not found:
+						return False
+		return True
+
+	def mark(self,mapM):
+		mapM.mark(self.x,self.y)
+		self.setState(MARKED)
+
+	def probe(self,mapM):
+		result = mapM.probe(self.x,self.y)
+		self.setState(result)
+		return result
+
+	def getState(self):
+		return self.state
+
+	def setState(self,state):
+		if state == self.state:
+			return
+		board = self.csp.board
+		if self.state == UNKNOWN:
+			board.unknown -= 1
+		elif self.state == CONSTRAINED:
+			board.constrained -= 1
+		elif self.state == MARKED:
+			board.mine -= 1
+		else:
+			board.clear -= 1
+
+		self.state = state
+		if state == UNKNOWN:
+			board.unknown += 1
+		elif state == CONSTRAINED:
+			board.constrained += 1
+			self.boundary_level = 0
+			for i in range(self.nx1,self.nx2):
+				for j in range(self.ny1,self.ny2):
+					if board[x][]
 		
 
 class CSPBoard(object):
@@ -63,14 +103,14 @@ class CSPBoard(object):
 		self.unknown = 0
 		self.constrained = 0
 		self.clear = 0
-		self.csp_board = None
+		self.board = None
 
 	def CreateBoard(self,board):
-		self.csp_board = []
+		self.board = []
 		for x in range(len(board)):
-			self.csp_board.append([])
+			self.board.append([])
 			for y in range(len(board[0])):
-				self.csp_board[x].append(CSPSquare(x,y,self.csp_board))
+				self.board[x].append(CSPSquare(x,y,self.csp_board))
 				self.unknown += 1
 
 	def nonConstrainedCount(self):
@@ -79,9 +119,9 @@ class CSPBoard(object):
 	def enumerateBoundary(self,level):
 		result = []
 		count = 0
-		board = self.csp_board
-		for x in range(len(self.csp_board)):
-			for y in range(len(self.csp_board[0])):
+		board = self.board
+		for x in range(len(board)):
+			for y in range(len(board[0])):
 				if (board[x][y].state == UNKNOWN and board[x][y].boundary_level == level):
 					count += 1
 					result.append(board[x][y])
@@ -92,7 +132,7 @@ class CSPBoard(object):
 
 	def enumerateMaxBoundary(self):
 		maxN = 0
-		board = self.csp_board
+		board = self.board
 		for x in range(len(board)):
 			for y in range(len(board[0])):
 				if (board[x][y].state == UNKNOWN and board.boundary_level > maxN):
@@ -103,7 +143,7 @@ class CSPBoard(object):
 
 	def enumerateMinBoundary(self):
 		minN = 1000
-		board = self.csp_board
+		board = self.board
 		for x in range(len(board)):
 			for y in range(len(board[0])):
 				# Try with boundary level >= 0 later...
@@ -122,7 +162,7 @@ class CSPBoard(object):
 			return None
 		result = []
 		count = 0
-		board = self.csp_board
+		board = self.board
 		for x in range(len(board)):
 			for y in range(len(board[0])):
 				if(board[x][y].state == UNKNOWN):
@@ -132,7 +172,7 @@ class CSPBoard(object):
 
 	def enumerateEdges(self):
 		v = []
-		board = self.csp_board
+		board = self.board
 		for x in range(1,len(board)-1):
 			if board[x][0].state<CONSTRAINED:
 				v.append(board[x][0])
@@ -149,7 +189,7 @@ class CSPBoard(object):
 
 	def enumerateCorners(self):
 		result = []
-		board = self.csp_board
+		board = self.board
 		maxX = len(board)-1
 		maxY = len(board[0])-1
 		if board[0][0].state < CONSTRAINED:
