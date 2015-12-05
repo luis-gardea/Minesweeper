@@ -109,13 +109,12 @@ class MineMap(object):
         if self.mine_map[y][x] >= 0:
           self.mine_map[y][x] = BOOM
           k += 1
-      
-    self.computeweights();
+      self.computeweights();
 
   # Compute weights
   def computeweights(self):
     for y in range(self.rows):
-	   for x in range(self.cols):
+      for x in range(self.cols):
 	      if (self.mine_map[y][x] >= 0):
     		  w = 0;
     		  y0 = max(0, y - 1)
@@ -206,8 +205,8 @@ class MineMap(object):
 
     for y in range(self.rows):
       for x in range(self.cols):
-	     if (self.mine_map[y][x] < 0) != self.unprobed_map[y][x]:
-	       return False
+        if (self.mine_map[y][x] < 0) != self.unprobed_map[y][x]:
+          return False
 
     self.finished = True
     self.victory = True
