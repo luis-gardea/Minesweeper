@@ -1,5 +1,5 @@
 import csp
-#import map
+import minemap
 
 # /* Copyright (C) 2001 Chris Studholme
 

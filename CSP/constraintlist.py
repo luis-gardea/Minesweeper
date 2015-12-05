@@ -1,4 +1,5 @@
-#import csp;
+import csp
+import minemap
 
 # /* Copyright (C) 2001 Chris Studholme
  
@@ -30,7 +31,7 @@ class ConstraintList(object):
         #  * Array of constraints containing the variable.
         #  */
         self.constraints = []
-        constraint.append(c)
+        self.constraints.append(c)
 
         # /**
         #  * A particular board position (variable).
@@ -53,7 +54,7 @@ class ConstraintList(object):
     #  * Update all constraints given that variable has a new test assignment.
     #  */
     def updateConstraints(self):
-	    for constraint in constraints:
+	    for constraint in self.constraints:
 	       constraint.updateVariable(self.variable)
 
     # /**
@@ -61,7 +62,7 @@ class ConstraintList(object):
     #  * @return false if any constraint is not satisfied
     #  */
     def checkConstraints(self):
-	    for constraint in constraints:
+	    for constraint in self.constraints:
 	        if not constraint.isSatisfied():
 		        return False
 	    return True

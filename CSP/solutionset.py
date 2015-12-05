@@ -1,5 +1,6 @@
-#import csp
-#import map.Map
+import csp
+import minemap
+import constraintlist
 
 class SolutionSet(object):
 	"""docstring for SolutionSet
@@ -47,17 +48,6 @@ any later version.
 	VERBOSE = False
 
 	def __init__(self, constraints, startIndex = 0, nconstraints = -1):
-		self.constraints = []
-		self.nconstraints = None
-		self.variables = []
-		self.nodes = []
-		self.nvariables = None
-		self.solutions = []
-		self.mines = []
-		self.min = None
-		self.max = None
-		self.bestProbe = None
-
 		if nconstraints == -1:
 			nconstraints = len(constraints)
 
@@ -88,7 +78,7 @@ any later version.
 						break
 				if not found:
 					self.nvariables += 1
-		    		self.nodes.append(ConstraintList(constraint, var))
+		    		self.nodes.append(constraintlist.ConstraintList(constraint, var))
 	    	self.min += constraint.getConstant()
 
 		# Note: we used min here to tally the absolute maximum number of mines
