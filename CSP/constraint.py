@@ -1,5 +1,5 @@
-#import csp
-#import map.Map
+import csp
+import minemap
 
 class Contraint(object):
 	"""docstring for Contraint
@@ -72,12 +72,6 @@ class Contraint(object):
 				self.unassigned += 1
 			elif var.testAssignment >= 1:
 				self.current_constant += 1
-		# for i in range(self.nvariables):
-	 #    	if self.variables[i].testAssignment < 0:
-		# 		self.next_unassigned = self.variables[i]
-		# 		self.unassigned += 1
-	 #    	elif self.variables[i].testAssignment >= 1:
-		# 		self.current_constant += 1
 
 	def isSatisfied(self):
 		if self.current_constant > self.constant:
@@ -99,7 +93,7 @@ class Contraint(object):
 	    	return self.next_unassigned
 		return None
 
-	def updateAndRemoveKnownvariables(self, map):
+	def updateAndRemoveKnownvariables(self, mapM):
 		# first check for previously known values
 		for var in reversed(self.variables):
 			s = var.getState()
@@ -107,7 +101,7 @@ class Contraint(object):
 				# clear (remove variable)
 				self.nvariables -= 1
 				self.variables.remove(var)
-	    	elif s == BoardPosition.MARKED:
+	    	elif s == csp.MARKED:
 				# marked (remove variable and decrement constant)
 				self.nvariables -= 1
 				self.variables.remove(var)
@@ -122,12 +116,12 @@ class Contraint(object):
 		if self.constant == 0:
 	    	# all variables are 0 (no mines)
 			for var in self.variables:
-				var.probe(map)
+				var.probe(mapM)
 				result.append(var.newConstraint())
 		elif self.constant == self.nvariables:
 	    	# all variables are 1 (are mines)
 			for var in self.variables:
-				var.mark(map)
+				var.mark(mapM)
 		else: 
 			return None
 
