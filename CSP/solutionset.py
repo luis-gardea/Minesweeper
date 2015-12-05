@@ -2,6 +2,7 @@ import csp
 import minemap
 import constraintlist
 import cspstrategy
+import sys
 
 largest_nvars = 0
 largest_neqns = 0
@@ -53,12 +54,12 @@ any later version.
 		if nconstraints == -1:
 			nconstraints = len(constraints)
 
-		self.construct(constraints[startIndex:startIndex + nconstraints], nconstraints)
+		self.construct(constraints[startIndex:], nconstraints)
 
 	def construct(self, constraints, nconstraints):
 		self.constraints = constraints
 		self.nconstraints = nconstraints
-		self.VERBOSE = cspstrategy.CSPStrategy().VERBOSE
+		self.VERBOSE = cspstrategy.VERBOSE
 
 		self.variables = []
 		self.nodes = []
@@ -88,10 +89,14 @@ any later version.
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
+		for node in self.nodes:
+			print node.nconstraints
 		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
-		if self.nodes[0].nconstraints < self.nodes[nvariables-1].nconstraints:
+		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
 			raise Exception("WRONG ORDER!!!")
-
+		for node in self.nodes:
+			print node.nconstraints
+		sys.exit(0)
 		# create variables array
 		self.variables = []
 		for i in range(self.nvariables):
