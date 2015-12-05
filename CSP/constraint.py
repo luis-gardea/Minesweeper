@@ -95,21 +95,20 @@ class Constraint(object):
 
 	def updateAndRemoveKnownVariables(self, mapM):
 		# first check for previously known values
-		
-		for i in range(len(self.variables)-1,-1,-1):
-			x = self.variables[i].getState()
-	    	if x >= 0:
-				# clear (remove variable)
-				self.nvariables -= 1
-				self.variables.pop(i)
-				# self.variables[i]=self.variables[self.nvariables]
-	    	elif x == csp.MARKED:
-				# marked (remove variable and decrement constant)
-				self.nvariables -= 1
-				self.variables.pop(i)
-				# self.variables[i]=self.variables[self.nvariables]
-				self.constant -= 1
-
+		if len(self.variables) != 0:
+			for i in range(len(self.variables)-1,-1,-1):
+				x = self.variables[i].getState()
+		    	if x >= 0:
+					# clear (remove variable)
+					self.nvariables -= 1
+					self.variables.pop(i)
+					# self.variables[i]=self.variables[self.nvariables]
+		    	elif x == csp.MARKED:
+					# marked (remove variable and decrement constant)
+					self.nvariables -= 1
+					self.variables.pop(i)
+					# self.variables[i]=self.variables[self.nvariables]
+					self.constant -= 1
 
 		# if no variables left, return
 		if self.nvariables <= 0:
