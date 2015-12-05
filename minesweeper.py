@@ -1,6 +1,7 @@
 from random import randint
 import random
 import numpy as np
+import collections
 
 # Class: Square
 # Helper class designed to make it easy to implement a board with 
@@ -396,3 +397,37 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, difficulty= 1, 
         np.save('train_labels', Y)
 
     return X, Y
+
+# Generates a map containing estimated q values for each (state, action) pair,
+# where the action is the location of the next move.
+def generate_state_map(num_total_simulations=100, row=4, col=4, difficulty=1, rewardValue=10, eta=0.1):
+
+        numIterations = 0
+
+        def getStepSize():
+            return 1.0 / math.sqrt(numIterations)
+
+        qMap = collections.Counter()
+
+        for i in xrange(num_total_simulations):
+            game = MineSweeper(row, col, difficulty)
+
+            location = (randint(0, game.row_size), randint(0, game.row_size))
+            nextMove = game.get_square(location)
+            currentState = game.get_init_state()
+            reward = 0
+
+            while True:
+            
+                reward = rewardValue if not game.is_bomb(nextMove) else -1*rewardValue
+                stateAndAction = (currentState, nextMove.location)
+                qMap[stateAndAction] += getStepSize() * reward
+                game.get_next_state(nextMove)
+
+                if game.gameEnd:
+                    break
+
+                frontier = game.get_frontier()
+                nextMove = random.choice(frontier)
+
+    return qMap
