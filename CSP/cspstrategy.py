@@ -363,7 +363,7 @@ class CSPStrategy(object):
 			# // check for empty or simplifiable constraints
 			for i in range(self.nconstraints):
 				# check for empty, eliminate if necessary
-				while self.constraints[i].isEmpty() and self.nconstraints > 0:
+				while self.constraints[i].isEmpty() and i < self.nconstraints:
 					self.constraints[i] = self.constraints[-1]
 					self.constraints.pop()
 					self.nconstraints -= 1
