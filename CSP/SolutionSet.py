@@ -1,5 +1,5 @@
-import csp
-import map.Map
+#import csp
+#import map.Map
 
 class SolutionSet(object):
 	"""docstring for SolutionSet
@@ -46,21 +46,24 @@ any later version.
 	largest_nsols = 0
 	VERBOSE = False
 
-	def __init__(self, constraints):
-    	self.constraints = []
-    	self.nconstraints = None
-    	self.variables = []
-    	self.nodes = []
-    	self.nvariables = None
+	def __init__(self, constraints, startIndex = 0, nconstraints = -1):
+		self.constraints = []
+		self.nconstraints = None
+		self.variables = []
+		self.nodes = []
+		self.nvariables = None
 		self.solutions = []
-    	self.mines = []
+		self.mines = []
 		self.min = None
-   		self.max = None
-    	self.bestProbe = None
+		self.max = None
+		self.bestProbe = None
 
-		self.construct(constraints, len(constraints))
+		if nconstraints == -1:
+			nconstraints = len(constraints)
 
-	def construct(self, constraints, startIndex = 0, nconstraints):
+		self.construct(constraints[startIndex:startIndex + nconstraints], nconstraints)
+
+	def construct(self, constraints, nconstraints):
 		self.constraints = constraints
 		self.nconstraints = nconstraints
 		self.VERBOSE = CSPStrategy.VERBOSE
@@ -75,11 +78,11 @@ any later version.
 	
 		# tally variables and count maximum mines
 		for constraint in self.constraints:
-	    	vararray = constraint.getVariables()
+			vararray = constraint.getVariables()
 	    	for var in vararray:
 				found = False
-				for node in nodes:
-		    		if node.variable == var:
+				for node in self.nodes:
+					if node.variable == var:
 						node.addConstraint(constraint)
 						found = True
 						break
@@ -95,46 +98,46 @@ any later version.
 		# sort variables in decending order by number of constraints
 		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
 		if self.nodes[0].nconstraints < self.nodes[nvariables-1].nconstraints:
-	    	raise Exception("WRONG ORDER!!!")
+			raise Exception("WRONG ORDER!!!")
 
 		# create variables array
 		self.variables = []
 		for i in range(self.nvariables):
-	    	self.variables[i] = self.nodes[i].variable
+			self.variables[i] = self.nodes[i].variable
 
 		# create needed arrays
-		self.solutions []
+		self.solutions = []
 		self.mines = []
 		for i in range(self.min):
-	    	self.mines.append([])
+			self.mines.append([])
 
 	def getVariableCount(self):
 		return self.nvariables
 
-    def getConstraintCount(self):
+	def getConstraintCount(self):
 		return self.nconstraints
 
-    def getMin(self):
+	def getMin(self):
 		return self.min
 
 	def getMax(self):
 		return self.max
 
-    def expectedMines(self):
+	def expectedMines(self):
 		total = 0
 		count = 0
 		for i in range(self.min, self.max + 1):
-	    	total += i*self.solutions[i]
+			total += i*self.solutions[i]
 	    	count += self.solutions[i]
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
 		if newmin > self.min:
-	    	for i in range(self.min, newmin):
+			for i in range(self.min, newmin):
 				self.solutions[i] = 0
     		self.min = newmin
 		if newmax < self.max:
-	    	for i in range(newmax + 1, self.max + 1):
+			for i in range(newmax + 1, self.max + 1):
 				self.solutions[i] = 0
 	    	self.max = newmax
 		# NOTE: mines[][] has not been zeroed out (but that's ok)
@@ -142,55 +145,53 @@ any later version.
 	def findBestProbe(self):
 		total_solutions = 0
 		for j in range(self.min, self.max + 1):
-	    	total_solutions += self.solutions[j]
+			total_solutions += self.solutions[j]
 		best = total_solutions
 		for i in range(self.nvariables):
-    		total = 0
+			total = 0
 			for j in range(self.min, self.max + 1):
 				total += self.mines[j][i]
     		if total < best:
 				best = total
 				self.bestProbe = self.variables[i]
-		return best/(float)total_solutions
+		return best/float(total_solutions)
 
-    def doBestProbe(self, map):
+	def doBestProbe(self, map):
 		if self.bestProbe == None:
-	    	self.findBestProbe()
+			self.findBestProbe()
 		s = self.bestProbe.probe(map)
 		return self.bestProbe.newConstraint() if s >= 0 else None
 
 	def doCrapsShoot(self, map):
 		if self.min != self.max:
-	    	return None
+			return None
 		for i in range(nvariables):
-	    	if not self.variables[i].neighboursKnownOrInSet(self.variables, self.nvariables):
+			if not self.variables[i].neighboursKnownOrInSet(self.variables, self.nvariables):
 				return None
 		# figure out best choice (and mark for sure mines when found)
 		best = -1
 		bestcount = self.solutions[self.min]
 		for i in range(self.nvariables):
-	    	if self.mines[self.min][i] < bestcount:
+			if self.mines[self.min][i] < bestcount:
 				bestcount = self.mines[self.min][i];
 				best=i
-    		elif self.mines[self.min][i] == self.solutions[self.min]:
+			elif self.mines[self.min][i] == self.solutions[self.min]:
 				# for-sure mine
 				self.variables[i].mark(map)
 		if best < 0:
 	    	# must be all mines
-	    	return None
+			return None
 		if bestcount == 0:
 	    	# for-sure clear
-	    	self.variables[best].probe(map)
-		else
-	    	if self.VERBOSE
+			self.variables[best].probe(map)
+		else:
+			if VERBOSE:
 				print("GUESS: " + (100-100*bestcount/self.solutions[self.min]) + "\% CRAPS ...")
-	    	s = self.variables[best].probe(map)
-	    	if s < 0:
-				if self.VERBOSE:
-		    		print(" FAILED!")
+			s = self.variables[best].probe(map)
+			if s < 0:
+				if VERBOSE: print(" FAILED!")
 				return None
-		    if self.VERBOSE:
-				print(" YEAH!")
+			if VERBOSE: print(" YEAH!")
 		return self.variables[best].newConstraint()
 
 	def markMines(self, map):
@@ -207,97 +208,85 @@ any later version.
 	def enumerateSolutions(self):
 		# initialize counters
 		for i in range(len(self.solutions)):
-	    	self.solutions[i] = 0
+			self.solutions[i] = 0
     		for j in range(self.nvariables):
 				self.mines[i][j] = 0
 		# initialize all variables to unset
 		for i in range(nvariables):
-	    	self.variables[i].testAssignment = -1
+			self.variables[i].testAssignment = -1
 		# index to variable used at each level
 		variableindex = [-1]*self.nvariables
 		# last choice of variable by constrainedness
 		lastchoice =- 1
 		# initialize constraints
 		for i in range(nconstraints):
-	    	self.constraints[i].updateVariable(NOne)
+			self.constraints[i].updateVariable(NOne)
 	
 		# main loop
 		level = 0
 		while True:
-	    	if level == self.nvariables:
+			if level == self.nvariables:
 				# all variables assigned, enumerate solution
 				m = 0
 				for j in range(self.nvariables):
-		    		m += self.variables[j].testAssignment
+					m += self.variables[j].testAssignment
 				self.solutions[m] += 1
 				if m < self.min: 
 					self.min = m
 				if m > self.max:
 					self.max = m
 				for j in range(self.nvariables):
-		    		self.mines[m][j] += self.variables[j].testAssignment
+					self.mines[m][j] += self.variables[j].testAssignment
 				# go up
 				level -= 1
 				continue
 
-	    	if variableindex[level] < 0:
+			if variableindex[level] < 0:
 				# pick next variable
 				var = None
 				i = 0
 				while var == None and i < self.nconstraints:
 					i += 1
-		    		var = self.constraints[i].suggestUnassignedVariable()
-				if var != null:
-	    			# find suggested variable
-	    			variableindex[level]=nvariables;
-		    			while (!variables[--variableindex[level]].equals(var)) ;
-		    --var.testAssignment; // we re-increment it below
-		}
-		else {
-		    // find next most constrained variable
-		    while (variables[++lastchoice].testAssignment>=0) ;
-		    variableindex[level]=lastchoice;
-		}
-	    }
-	    
-	    if (variables[variableindex[level]].testAssignment>0) {
-		// domain exhausted, reset assignment and go up
-		if (variableindex[level]<=lastchoice)
-		    lastchoice=variableindex[level]-1;
-		variables[variableindex[level]].testAssignment=-1;
-		nodes[variableindex[level]].updateConstraints();
-		variableindex[level]=-1;
-		--level;
-	    }
-	    
-	    else {
-		// try next value in domain
-		++variables[variableindex[level]].testAssignment;
-		// update all constraints that have this variables
-		nodes[variableindex[level]].updateConstraints();
-		// check constraints
-		if (nodes[variableindex[level]].checkConstraints())
-		    // go down if constraints are satisfied
-		    ++level;
-	    }
-	} while (level>=0);
+		    			var = self.constraints[i].suggestUnassignedVariable()
+				if var != None:
+					# find suggested variable
+					variableindex[level] = self.nvariables
+					variableindex[level] -= 1	
+					while var != variables[variableindex[level]]:
+						variableindex[level] -= 1
+					var.testAssignment -= 1 # we re-increment it below
+				else:
+					# find next most constrained variable
+					lastchoice += 1	
+					while self.variables[lastchoice].testAssignment >= 0:
+						lastchoice += 1
+					variableindex[level] = lastchoice
 
-	// check if this was the largest system solved
-	if (nvariables-nconstraints>largest_nvars-largest_neqns) {
-	    largest_nvars=nvariables;
-	    largest_neqns=nconstraints;
-	    largest_nsols=0;
-	    for (int i=min; i<=max; ++i)
-		largest_nsols += solutions[i];
+			if self.variables[variableindex[level]].testAssignment > 0:
+				# domain exhausted, reset assignment and go up
+				if variableindex[level] <= lastchoice:
+					lastchoice = variableindex[level] - 1 
+				self.variables[variableindex[level]].testAssignment = -1
+				self.nodes[variableindex[level]].updateConstraints()
+				variableindex[level] = -1
+				level -= 1
+			else:
+				# try next value in domain
+				variables[variableindex[level]].testAssignment += 1
+				# update all constraints that have this variables
+				self.nodes[variableindex[level]].updateConstraints()
+				# check constraints
+				if self.nodes[variableindex[level]].checkConstraints():
+			    	# go down if constraints are satisfied
+					level += 1
 
+			if level < 0:
+				break
 
-
-
-
-
-
-
-
-
-
-		
+		# check if this was the largest system solved
+		if self.nvariables - self.nconstraints > largest_nvars - largest_neqns:
+			largest_nvars = self.nvariables
+			largest_neqns = self.nconstraints
+			largest_nsols = 0
+			for solution in self.solutions:
+				largest_nsols += solution		

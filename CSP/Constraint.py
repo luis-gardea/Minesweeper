@@ -1,5 +1,5 @@
-import csp
-import map.Map
+#import csp
+#import map.Map
 
 class Contraint(object):
 	"""docstring for Contraint
@@ -70,7 +70,7 @@ class Contraint(object):
 			if var.testAssignment < 0:
 				self.next_unassigned = var
 				self.unassigned += 1
-	    	else var.testAssignment >= 1:
+			elif var.testAssignment >= 1:
 				self.current_constant += 1
 		# for i in range(self.nvariables):
 	 #    	if self.variables[i].testAssignment < 0:
@@ -79,30 +79,30 @@ class Contraint(object):
 	 #    	elif self.variables[i].testAssignment >= 1:
 		# 		self.current_constant += 1
 
-    def isSatisfied(self):
+	def isSatisfied(self):
 		if self.current_constant > self.constant:
-	    	return False
+			return False
 		if self.unassigned > 0:
-	    	return True
+			return True
 		return self.current_constant == self.constant
 
 	def suggestUnassignedVariable(self):
 		if self.next_unassigned == None:
-	    	return None
+			return None
 		if self.current_constant == self.constant:
 	    	# all mines accounted for (only 0's left)
-	    	self.next_unassigned.testAssignment = 0
+			self.next_unassigned.testAssignment = 0
 	    	return self.next_unassigned
 		if self.constant - self.current_constant == self.unassigned: 
 	    	# all remaining vars are mines (1's)
-	    	self.next_unassigned.testAssignment = 1
+			self.next_unassigned.testAssignment = 1
 	    	return self.next_unassigned
 		return None
 
 	def updateAndRemoveKnownvariables(self, map):
 		# first check for previously known values
 		for var in reversed(self.variables):
-	    	s = var.getState()
+			s = var.getState()
 	    	if s >= 0:
 				# clear (remove variable)
 				self.nvariables -= 1
@@ -115,21 +115,21 @@ class Contraint(object):
 
 		# if no variables left, return
 		if self.nvariables <= 0:
-	    	return None
+			return None
 
 		# check for all clear or all marked
 		result = []
 		if self.constant == 0:
 	    	# all variables are 0 (no mines)
-	    	for var in self.variables:
+			for var in self.variables:
 				var.probe(map)
 				result.append(var.newConstraint())
 		elif self.constant == self.nvariables:
 	    	# all variables are 1 (are mines)
-	    	for var in self.variables:
+			for var in self.variables:
 				var.mark(map)
-		else 
-	    	return None
+		else: 
+			return None
 
 		# empty constraint
 		self.nvariables=0
@@ -139,30 +139,30 @@ class Contraint(object):
 	def simplify(self, other):
 		if self.nvariables < other.nvariables:
 	    	# Are we a subset of other?  Let other figure it out.
-    		return other.simplify(self)
+			return other.simplify(self)
 
 		# Is other a subset of us?
 		for i in range(other.nvariables):
-	    	for j in range(self.nvariables):
+			for j in range(self.nvariables):
 				if self.variables[j] == other.variables[i]:
-		    		break
+					break
 				elif j >= self.nvariables - 1:
-		    		return False
+					return False
 
 		# remove other's variables from this
 		for i in range(other.nvariables):
-	    	for j in range(self.nvariables):
+			for j in range(self.nvariables):
 				if self.variables[j] == other.variables[i]:
-		    		del variables[j]
+					del variables[j]
 	    			break
 		self.constant -= other.constant
 		return True
 
 	def coupledWith(self, other):
 		for i in range(other.nvariables):
-	    	for j in range(self.nvariables):
+			for j in range(self.nvariables):
 				if self.variables[j] == other.variables[i]:
-		    		return True
+					return True
 		return False
 
 
