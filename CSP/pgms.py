@@ -1,7 +1,6 @@
 import sys
 
 class PGMS(object):
-	self.default_strategy_name = "cspstrategy.CSPStrategy"
 
 	def __init__(self,s = None,mines = 40,rows = 16,cols = 16,hinted = False,realrules = False):
 		self.s = s
@@ -18,7 +17,7 @@ class PGMS(object):
 
 def main(args):
 	game = PGMS()
-	strategy_name = game.default_strategy_name
+	strategy_name = "cspstrategy.CSPStrategy"
 	game_name = 'intermediate'
 	mines = 40
 	rows = 16
