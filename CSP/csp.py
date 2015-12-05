@@ -9,6 +9,7 @@ class CSPSquare(object):
 	def __init__(self, x,y, csp):
 		self.state = UNKNOWN
 		self.csp = csp
+		self.board = csp.board
 		self.boundary_level = 0
 		# x and y coordinates of this position
 		self.x = x
@@ -30,12 +31,12 @@ class CSPSquare(object):
 		switch = {UNKNOWN:'U',CONSTRAINED:'C',MARKED:'M'}
 		return "(%s,%s,%s)" %  (switch[self.state],self.x,self.y)
 
-	def newConstrain(self):
+	def newConstraint(self):
 		if self.state < 0:
 			return None
 		c = Constraint()
 		constant = self.state
-		board = self.csp.board
+		board = self.board
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < 0:
@@ -48,7 +49,7 @@ class CSPSquare(object):
 		return c
 
 	def neighborsKnownOrInSet(self,variables,nvariables):
-		board = self.csp.board 
+		board = self.board 
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < MARKED:
@@ -77,7 +78,7 @@ class CSPSquare(object):
 		if state == self.state:
 			return
 		csp = self.csp
-		board = self.csp.board
+		board = self.board
 		if self.state == UNKNOWN:
 			csp.unknown -= 1
 		elif self.state == CONSTRAINED:
@@ -111,7 +112,7 @@ class CSPSquare(object):
 		
 
 class CSPBoard(object):
-	def __init__(self,mines,total):
+	def __init__(self):
 		self.mine = 0
 		self.unknown = 0
 		self.constrained = 0
