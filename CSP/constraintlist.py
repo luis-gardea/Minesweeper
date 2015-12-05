@@ -48,7 +48,9 @@ class ConstraintList(object):
     #  * @param c constraint
     #  */
     def addConstraint(self, c):
-	    self.constraints.append(c)
+        self.nconstraints += 1
+        self.constraints.append(c)
+
 
     # /**
     #  * Update all constraints given that variable has a new test assignment.

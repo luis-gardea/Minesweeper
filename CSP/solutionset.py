@@ -3,6 +3,11 @@ import minemap
 import constraintlist
 import cspstrategy
 
+largest_nvars = 0
+largest_neqns = 0
+largest_nsols = 0
+VERBOSE = False
+
 class SolutionSet(object):
 	"""docstring for SolutionSet
 /* Copyright (C) 2001 Chris Studholme
@@ -43,10 +48,6 @@ any later version.
  * @author Chris Studholme
  */
 	"""
-	largest_nvars = 0
-	largest_neqns = 0
-	largest_nsols = 0
-	VERBOSE = False
 
 	def __init__(self, constraints, startIndex = 0, nconstraints = -1):
 		if nconstraints == -1:

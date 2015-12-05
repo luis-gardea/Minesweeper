@@ -1,7 +1,7 @@
 import csp
 import minemap
 
-class Contraint(object):
+class Constraint(object):
 	"""docstring for Contraint
 
 	Copyright (C) 2001 Chris Studholme
@@ -33,9 +33,9 @@ class Contraint(object):
 	@author Chris Studholme
 	"""
 
-	def __init__(self, constant = None):
+	def __init__(self, constant = 0):
 		self.variables = []
-		self.nvariables = None
+		self.nvariables = 0
 		self.constant = constant
 		self.unassigned = None
 		self.current_constant = None
@@ -93,19 +93,23 @@ class Contraint(object):
 	    	return self.next_unassigned
 		return None
 
-	def updateAndRemoveKnownvariables(self, mapM):
+	def updateAndRemoveKnownVariables(self, mapM):
 		# first check for previously known values
-		for var in reversed(self.variables):
-			s = var.getState()
-	    	if s >= 0:
+		
+		for i in range(len(self.variables)-1,-1,-1):
+			x = self.variables[i].getState()
+	    	if x >= 0:
 				# clear (remove variable)
 				self.nvariables -= 1
-				self.variables.remove(var)
-	    	elif s == csp.MARKED:
+				self.variables.pop(i)
+				# self.variables[i]=self.variables[self.nvariables]
+	    	elif x == csp.MARKED:
 				# marked (remove variable and decrement constant)
 				self.nvariables -= 1
-				self.variables.remove(var)
+				self.variables.pop(i)
+				# self.variables[i]=self.variables[self.nvariables]
 				self.constant -= 1
+
 
 		# if no variables left, return
 		if self.nvariables <= 0:
@@ -144,11 +148,17 @@ class Contraint(object):
 					return False
 
 		# remove other's variables from this
-		for i in range(other.nvariables):
-			for j in range(self.nvariables):
-				if self.variables[j] == other.variables[i]:
-					del variables[j]
-	    			break
+		# for i in range(other.nvariables):
+		# 	for j in range(self.nvariables):
+		# 		if self.variables[j] == other.variables[i]:
+		# 			del variables[j]
+	 #    			break
+		for i in other.variables:
+			for j in self.variables:
+				if i == j:
+					self.nvariables -=1
+					self.variables.remove(i)
+					break
 		self.constant -= other.constant
 		return True
 

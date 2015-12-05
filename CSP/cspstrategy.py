@@ -14,6 +14,18 @@ import solutionset
 # */
 
 # /**
+#  * Should we print anything to System.out?
+#  */
+VERBOSE = True
+
+# /**
+#  * Threshold for display "solving..." message.  The message is displayed
+#  * if the number of variables minus the number of constraints exceeds
+#  * this threshold.
+#  */
+SOLVE_THRESHOLD = 20
+
+# /**
 #  * Public class CSPStrategy implements minesweeper strategy 
 #  * using CSP techniques.
 #  *
@@ -21,18 +33,7 @@ import solutionset
 #  * @author Chris Studholme
 #  */
 class CSPStrategy(object):
-	# /**
-	#  * Should we print anything to System.out?
-	#  */
-	VERBOSE = True
-
-	# /**
-	#  * Threshold for display "solving..." message.  The message is displayed
-	#  * if the number of variables minus the number of constraints exceeds
-	#  * this threshold.
-	#  */
-	SOLVE_THRESHOLD = 20
-
+	
 	# /**
 	# * Default constructor initializes the constraints array.
 	# */
@@ -53,10 +54,10 @@ class CSPStrategy(object):
 	#  * designed to fool us), we always start in the lower left corner.
 	#  * @param m game to play
 	#  */
-	def play(self, m):
+	def play1(self, m):
 		#play(m,m.columns()/2,m.rows()/2);
 		#play(m,m.pick(m.columns()),m.pick(m.rows()));
-		self.play(m, 0, 0)
+		self.play2(m, 0, 0)
 
 	# /**
 	#  * Play a hinted game.
@@ -64,20 +65,20 @@ class CSPStrategy(object):
 	#  * @param hint_column x coordinate of hint
 	#  * @param hint_row y coordinate of hint 
 	#  */
-	def play(m, hint_column, hint_row):
+	def play2(self,m, hint_column, hint_row):
 		self.map = m
 
 		# initialize SolutionSet statics
-		solutionset.SolutionSet().largest_neqns = 0
-		solutionset.SolutionSet().largest_nvars = 0
-		solutionset.SolutionSet().largest_nsols = 0
+		solutionset.largest_neqns = 0
+		solutionset.largest_nvars = 0
+		solutionset.largest_nsols = 0
 
 		# initialize board
 		cspboard = csp.CSPBoard()
 		cspboard.CreateBoard(self.map)
 
 		# use hint
-		if cspboard.board[hint_column][hint_row].probe(self.map) == Map.BOOM:
+		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
 			return
 
 		if VERBOSE:
@@ -85,8 +86,9 @@ class CSPStrategy(object):
 
 		# initialize constraints
 		self.nconstraints = 0
-		for x in range(self.map.columns()):
-			for y in range(self.map.rows()):
+		for x in range(self.map.cols):
+			for y in range(self.map.rows):
+				# print x,y, self.nconstraints
 				self.addConstraint(cspboard.board[x][y].newConstraint())
 
 		# main loop
@@ -94,6 +96,7 @@ class CSPStrategy(object):
 			# /* Simplify constraints by combining with each other and
 			#  * marking or probing _obvious_ mines and cleared areas.
 			#  */
+			print 'inside while loop'
 			self.simplifyConstraints()
 			if self.map.done():
 				break
@@ -285,11 +288,11 @@ class CSPStrategy(object):
 			#    */
 
 		# // miscellaneous stats
-		if VERBOSE and solutionset.SolutionSet().largest_nvars > 0:
+		if VERBOSE and solutionset.largest_nvars > 0:
 			print("Largest System Solved:  "+
-				solutionset.SolutionSet().largest_neqns+" equations  "+
-				solutionset.SolutionSet().largest_nvars+" variables  "+
-				solutionset.SolutionSet().largest_nsols+" solutions")
+				solutionset.largest_neqns+" equations  "+
+				solutionset.largest_nvars+" variables  "+
+				solutionset.largest_nsols+" solutions")
 
 	# /**
 	#  * Add a constraint to the master list.  If the constraint is null,
@@ -298,15 +301,17 @@ class CSPStrategy(object):
 	# */
 	def addConstraint(self, c):
 		if c == None:
+			# print 'c is none'
 			return
 		self.constraints.append(c)
+		self.nconstraints += 1
 
 	# /**
 	#  * Seperate the constraints into coupled subsets and create a new
 	#  * SolutionSet object for each one.
 	#  * @return full array of SolutionSet objects
 	#  */
-	def seperateConstraints():
+	def seperateConstraints(self):
 		sets = []
 		start = 0
 		for end in range(1, self.nconstraints + 1):
@@ -334,24 +339,32 @@ class CSPStrategy(object):
 	#  * simplify those constraints until no more work can be done.
 	#  */
 	def simplifyConstraints(self):
+		done = False
 		while True:
 			done = True;
-
+			# print 'in simplify constraints'
 			# // update state of varilables
+			# print self.constraints[0]
+
 			for i in range(self.nconstraints):
+				# print 'nvar',self.constraints[i].nvariables
 				newconstraints = self.constraints[i].updateAndRemoveKnownVariables(self.map)
+				print newconstraints
 				if newconstraints != None:
 					done = False
-					for j in range(self.nconstraints):
+					for j in range(len(newconstraints)):
 						self.addConstraint(newconstraints[j])
 
 			if not done:
+				print 'continuing'
 				continue
 
 			# // check for empty or simplifiable constraints
 			for i in range(self.nconstraints):
+				print 'in simplify constraints'
 				# check for empty, eliminate if necessary
 				while self.constraints[i].isEmpty() and i < self.nconstraints:
+					print 'in while'
 					self.nconstraints -= 1
 					self.constraints[i] = self.constraints[self.nconstraints]
 
@@ -359,7 +372,10 @@ class CSPStrategy(object):
 				if i < self.nconstraints:
 					for j in range(i+1, self.nconstraints):
 						if self.constraints[i].simplify(self.constraints[j]):
+							print 'simplify returns false'
 							done = False
 						
-				if done:
-					break
+			if done:
+				break
+			print 'here'
+			# sys.exit(0)

@@ -1,4 +1,4 @@
-import minesweeper, constraint 
+import minesweeper, constraint,sys
 
 UNKNOWN = -5
 CONSTRAINED = -4
@@ -16,10 +16,10 @@ class CSPSquare(object):
 		self.y = y
 		# neighbors have x values in nx1<=x<nx2 and
 		# y values in ny1<=y<ny2
-		self.nx1 = x-1 if x>0 else 0
-		self.nx2 = x+2 if x < len(csp.board)-1 else x+1
+		self.nx1 = x-1 if x > 0 else 0
+		self.nx2 = x+2 if x < csp.cols-1 else x+1
 		self.ny1 = y-1 if y > 0 else 0
-		self.ny2 = y+2 if y < len(csp.board[0]) else y+1
+		self.ny2 = y+2 if y < csp.rows-1 else y+1
 		# For use by SolutionSet and Constraint
 		self.testAssignment = -1
 
@@ -32,17 +32,20 @@ class CSPSquare(object):
 		return "(%s,%s,%s)" %  (switch[self.state],self.x,self.y)
 
 	def newConstraint(self):
+		# print self.state
 		if self.state < 0:
 			return None
 		c = constraint.Constraint()
 		constant = self.state
 		board = self.board
+
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < 0:
 					if board[i][j].state == MARKED:
 						constant -= 1
 					else:
+						
 						c.add(board[i][j])
 						board[i][j].setState(CONSTRAINED)
 		c.setConstant(constant)
@@ -121,9 +124,11 @@ class CSPBoard(object):
 
 	def CreateBoard(self,board):
 		self.board = []
-		for x in range(len(board)):
+		self.rows = board.rows
+		self.cols = board.cols
+		for x in range(board.cols):
 			self.board.append([])
-			for y in range(len(board[0])):
+			for y in range(board.rows):
 				self.board[x].append(CSPSquare(x,y,self))
 				self.unknown += 1
 

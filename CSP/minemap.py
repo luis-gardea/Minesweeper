@@ -105,7 +105,7 @@ class MineMap(object):
       k = 0
       while k < mines: # Place mines randomly
         x = self.pick(self.cols)
-        y = selfpick(self.rows)
+        y = self.pick(self.rows)
         if self.mine_map[y][x] >= 0:
           self.mine_map[y][x] = BOOM
           k += 1
@@ -185,7 +185,7 @@ class MineMap(object):
   #  * @return            a nonnegative number less than n
   #  */
   def pick(self, n):
-    return randint(0, n)
+    return randint(0, n-1)
   
   # /**
   #  * Has this game been won?

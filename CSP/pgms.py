@@ -114,10 +114,10 @@ def main(args):
 		for n in range(1,trys+1):
 			m = minemap.MineMap(mines,rows,cols,realrules)
 			if not hinted:
-				s.play(m)
+				s.play1(m)
 			else:
 				hint = m.hint()
-				s.play(m,hint[0],hint[1])
+				s.play2(m,hint[0],hint[1])
 
 			game_count += 1
 
@@ -127,8 +127,8 @@ def main(args):
 		sumsqr += wins**2
 	print "In %s sets of %s tries (%s) games total:" % (sets,trys,sets*trys)
 	mean = sumN / float(sets)
-	print " Mean wins: %s/%s (%s%)" % (mean,trys,int(100.0*mean/trys+0.5))
-	var = (sumsqr - sum**2/float(sets))/sets
+	print " Mean wins: %s/%s (%s percent)" % (mean, trys, int(100.0*mean/trys+0.5) )
+	var = (sumsqr - (sumN**2)/float(sets))/sets
 	print " Standard deviation: %s" % var**(0.5)
 	print " Stanfard error of the mean: %s" % (var/sets)**(0.5)
 
