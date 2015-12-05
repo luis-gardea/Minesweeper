@@ -125,21 +125,21 @@ class CSPStrategy(object):
 					# determine number of variables in largest subproblem
 					nvars = subsets[0].getVariableCount()
 					ncnts = subsets[0].getConstraintCount()
-					for i in range(nsubsets):
+					for i in range(1, nsubsets):
 						if (subsets[i].getVariableCount() - subsets[i].getConstraintCount()) > nvars - ncnts:
 							nvars = subsets[i].getVariableCount()
 							ncnts = subsets[i].getConstraintCount()
 
-						if nvars - ncnts >= SOLVE_THRESHOLD:
-							solving_msg = True
-							if nsubsets == 1:
-								print("Solving "+ncnts+" constraint "+
-									nvars+" variable system...")
-							else:
-								print("Solving " + nsubsets + 
-									" systems (largest is "+
-										+ncnts+" constraints "+nvars+
-										" variables)...")
+					if nvars - ncnts >= SOLVE_THRESHOLD:
+						solving_msg = True
+						if nsubsets == 1:
+							print("Solving "+ncnts+" constraint "+
+								nvars+" variable system...")
+						else:
+							print("Solving " + nsubsets + 
+								" systems (largest is "+
+									+ncnts+" constraints "+nvars+
+									" variables)...")
 
 				# /* Solve each of the sub-problems by enumerating all solutions
 				#  * to the constraint satisfaction problem.
@@ -192,7 +192,8 @@ class CSPStrategy(object):
 					# // throw away subset so we don't do anything with it
 					# // again until the constraints are next simplified
 					nsubsets -= 1
-					subsets[i] = subsets[nsubsets]
+					subsets.pop(i)
+					#subsets[i] = subsets[nsubsets]
 					crapshoot = True
 				elif self.map.done():
 					break
@@ -238,14 +239,14 @@ class CSPStrategy(object):
 			# /* If best guess is a constrained position, probe it.
 			#  */
 			if best_subset >= 0:
-				if  VERBOSE:
+				if VERBOSE:
 					print("GUESS: "+(int)((1-best_prob)*100)+
 						"% educated ...")
-					c = subsets[best_subset].doBestProbe(self.map)
-					if c != None:
-						self.addConstraint(c)
-						if VERBOSE: print(" good.")
-					elif VERBOSE: print(" FAILED")
+				c = subsets[best_subset].doBestProbe(self.map)
+				if c != None:
+					self.addConstraint(c)
+					if VERBOSE: print(" good.")
+				elif VERBOSE: print(" FAILED")
 
 			# /* Otherwise, we probe one of the unknown positions.
 			#  */
@@ -325,12 +326,12 @@ class CSPStrategy(object):
 						if i != end:
 							# swap i and end
 							tmp = constraints[i]
-							constraints[i] = constraints[end]
-							constraints[end] = tmp
+							self.constraints[i] = self.constraints[end]
+							self.constraints[end] = tmp
 						break
 			# if none were found, we have a coupled set in [start,end)
 			if not found:
-				sets.append(solutionset.SolutionSet(constraints, start, end - start))
+				sets.append(solutionset.SolutionSet(self.constraints, start, end - start))
 				start = end
 		return sets
 
@@ -361,12 +362,20 @@ class CSPStrategy(object):
 
 			# // check for empty or simplifiable constraints
 			for i in range(self.nconstraints):
-				print 'in simplify constraints'
 				# check for empty, eliminate if necessary
-				while self.constraints[i].isEmpty() and i < self.nconstraints:
-					print 'in while'
+				while self.constraints[i].isEmpty():
+					self.constraints[i] = self.constraints[-1]
+					self.constraints.pop()
 					self.nconstraints -= 1
-					self.constraints[i] = self.constraints[self.nconstraints]
+
+			# for i in range(self.nconstraints):
+			# 	print 'in simplify constraints'
+			# 	# check for empty, eliminate if necessary
+			# 	while self.constraints[i].isEmpty() and i < self.nconstraints:
+			# 		print 'in while'
+			# 		self.nconstraints -= 1
+			# 		#self.constraints.pop(i)
+			# 		self.constraints[i] = self.constraints[self.nconstraints]
 
 				# // attempt to simplify using all others
 				if i < self.nconstraints:
