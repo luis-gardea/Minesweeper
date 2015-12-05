@@ -75,7 +75,7 @@ class ConstraintList(object):
     #  * @param o another ConstraintList instance
     #  * @return 1 if this has fewer constraints than o, -1 if more, 0 if equal
     #  */
-    def compareTo(o):
+    def compareTo(self, o):
 	    if self.nconstraints < o.nconstraints:
 	        return 1
 	    elif self.nconstraints > o.nconstraints:
