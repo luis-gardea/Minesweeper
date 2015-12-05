@@ -1,6 +1,7 @@
 import csp
 import minemap
 import constraintlist
+import cspstrategy
 
 class SolutionSet(object):
 	"""docstring for SolutionSet
@@ -56,7 +57,7 @@ any later version.
 	def construct(self, constraints, nconstraints):
 		self.constraints = constraints
 		self.nconstraints = nconstraints
-		self.VERBOSE = CSPStrategy.VERBOSE
+		self.VERBOSE = cspstrategy.CSPStrategy().VERBOSE
 
 		self.variables = []
 		self.nodes = []

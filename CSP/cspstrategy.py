@@ -1,5 +1,6 @@
 import csp
 import minemap
+import solutionset
 
 # /* Copyright (C) 2001 Chris Studholme
 
@@ -37,11 +38,6 @@ class CSPStrategy(object):
 	# */
 	def __init__(self):
 		# /**
-		#  * Private copy of the current game.
-		#  */
-		self.map
-
-		# /**
 		#  * Master list of outstanding constraints.
 		#  */
 		self.constraints = []
@@ -72,9 +68,9 @@ class CSPStrategy(object):
 		self.map = m
 
 		# initialize SolutionSet statics
-		SolutionSet.largest_neqns = 0
-		SolutionSet.largest_nvars = 0
-		SolutionSet.largest_nsols = 0
+		solutionset.SolutionSet().largest_neqns = 0
+		solutionset.SolutionSet().largest_nvars = 0
+		solutionset.SolutionSet().largest_nsols = 0
 
 		# initialize board
 		cspboard = csp.CSPBoard()
@@ -160,7 +156,7 @@ class CSPStrategy(object):
 			#  * positions is also calculated.
 			#  */
 			remaining = self.map.mines_minus_marks()
-			far = BoardPosition.nonConstrainedCount()
+			far = cspboard.nonConstrainedCount()
 			far_max = remaining
 			far_expected = remaining
 			for i in range(nsubsets):
@@ -214,7 +210,7 @@ class CSPStrategy(object):
 			#  * immediately afterwards.
 			#  */
 			if far_max <= 0 and far > 0:
-				positions = BoardPosition.enumerateUnknown()
+				positions = cspboard.enumerateUnknown()
 				for position in positions:
 					position.probe(self.map)
 					self.addConstraint(position.newConstraint())
@@ -252,19 +248,19 @@ class CSPStrategy(object):
 			#  */
 			else:
 				# first check the corners
-				positions = BoardPosition.enumerateCorners()
+				positions = cspboard.enumerateCorners()
 				category = "corner"
 				if positions == None:
 					# next check for edges
-					positions = BoardPosition.enumerateEdges()
+					positions = cspboard.enumerateEdges()
 					category = "edge"
 				if positions == None:
 					# next check for a boundary position
-					positions = BoardPosition.enumerateMaxBoundary()
+					positions = cspboard.enumerateMaxBoundary()
 					category = "boundary"
 				if positions == None:
 					# finally, if all else fails, probe some random position
-					positions = BoardPosition.enumerateUnknown()
+					positions = cspboard.enumerateUnknown()
 					category = "far"
 				if positions == None:
 					print("WHAT!  No boundary or unknown?")
@@ -289,11 +285,11 @@ class CSPStrategy(object):
 			#    */
 
 		# // miscellaneous stats
-		if VERBOSE and SolutionSet.largest_nvars > 0:
+		if VERBOSE and solutionset.SolutionSet().largest_nvars > 0:
 			print("Largest System Solved:  "+
-				SolutionSet.largest_neqns+" equations  "+
-				SolutionSet.largest_nvars+" variables  "+
-				SolutionSet.largest_nsols+" solutions")
+				solutionset.SolutionSet().largest_neqns+" equations  "+
+				solutionset.SolutionSet().largest_nvars+" variables  "+
+				solutionset.SolutionSet().largest_nsols+" solutions")
 
 	# /**
 	#  * Add a constraint to the master list.  If the constraint is null,
@@ -319,7 +315,7 @@ class CSPStrategy(object):
 			i = end
 			while i < self.nconstraints and not found:
 				for j in range(start, end):
-					if constraints[i].coupledWith(constraints[j]):
+					if self.constraints[i].coupledWith(self.constraints[j]):
 						found = True
 						if i != end:
 							# swap i and end
@@ -327,11 +323,11 @@ class CSPStrategy(object):
 							constraints[i] = constraints[end]
 							constraints[end] = tmp
 						break
-			# // if none were found, we have a coupled set in [start,end)
+			# if none were found, we have a coupled set in [start,end)
 			if not found:
-				sets.apend(SolutionSet(constraints, start, end - start))
+				sets.append(solutionset.SolutionSet(constraints, start, end - start))
 				start = end
-			return sets
+		return sets
 
 	# /**
 	#  * Repeatedly update and remove known variables from constraints and
@@ -344,7 +340,7 @@ class CSPStrategy(object):
 			# // update state of varilables
 			for i in range(self.nconstraints):
 				newconstraints = self.constraints[i].updateAndRemoveKnownVariables(self.map)
-				if self.newconstraints != None:
+				if newconstraints != None:
 					done = False
 					for j in range(self.nconstraints):
 						self.addConstraint(newconstraints[j])
@@ -356,13 +352,13 @@ class CSPStrategy(object):
 			for i in range(self.nconstraints):
 				# check for empty, eliminate if necessary
 				while self.constraints[i].isEmpty() and i < self.nconstraints:
-					nconstraints -= 1
-					self.constraints[i] = self.constraints[nconstraints]
+					self.nconstraints -= 1
+					self.constraints[i] = self.constraints[self.nconstraints]
 
 				# // attempt to simplify using all others
 				if i < self.nconstraints:
 					for j in range(i+1, self.nconstraints):
-						if self.onstraints[i].simplify(self.constraints[j]):
+						if self.constraints[i].simplify(self.constraints[j]):
 							done = False
 						
 				if done:
