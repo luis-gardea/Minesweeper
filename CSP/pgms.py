@@ -20,9 +20,9 @@ def main(args):
 	game = PGMS()
 	strategy_name = "cspstrategy.CSPStrategy"
 	game_name = 'intermediate'
-	mines = 40
-	rows = 16
-	cols = 16
+	mines = 2
+	rows = 3
+	cols = 3
 	hinted = False
 	realrules = False
 	trys = 1

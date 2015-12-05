@@ -70,37 +70,46 @@ any later version.
 		self.bestProbe = None
 	
 		# tally variables and count maximum mines
-		for constraint in self.constraints:
-			vararray = constraint.getVariables()
-	    	for var in vararray:
-				found = False
-				for node in self.nodes:
-					if node.variable == var:
-						node.addConstraint(constraint)
-						found = True
-						break
-				if not found:
-					self.nvariables += 1
-		    		self.nodes.append(constraintlist.ConstraintList(constraint, var))
-	    	self.min += constraint.getConstant()
-
+		# for constraint in self.constraints:
+		# 	vararray = constraint.getVariables()
+	 #    	for var in vararray:
+		# 		found = False
+		# 		for node in self.nodes:
+		# 			if node.variable == var:
+		# 				node.addConstraint(constraint)
+		# 				found = True
+		# 				break
+		# 		if not found:
+		# 			self.nvariables += 1
+		#     		self.nodes.append(constraintlist.ConstraintList(constraint, var))
+	 #    	self.min += constraint.getConstant()
+	 	for i in range(self.nconstraints):
+	 		vararray = self.constraints[i].getVariables()
+	 		for j in range(len(vararray)):
+	 			found = False
+	 			for k in range(self.nvariables):
+	 				if self.nodes[k].variable == vararray[j]:
+	 					self.nodes[k].addConstraint(self.constraints[i])
+	 					found = True
+	 					break
+	 			if not found:
+	 				self.nodes.append(constraintlist.ConstraintList(self.constraints[i],vararray[j]))
+	 				self.nvariables += 1
+	 		self.min += constraints[i].getConstant()
 		# Note: we used min here to tally the absolute maximum number of mines
 		# expected because this number is a good initial value for the minimum
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
-		for node in self.nodes:
-			print node.nconstraints
+		print len(self.nodes),len(constraints), nconstraints, self.nvariables
 		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
 		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
 			raise Exception("WRONG ORDER!!!")
-		for node in self.nodes:
-			print node.nconstraints
-		sys.exit(0)
+		
 		# create variables array
 		self.variables = []
 		for i in range(self.nvariables):
-			self.variables[i] = self.nodes[i].variable
+			self.variables.append(self.nodes[i].variable)
 
 		# create needed arrays
 		self.solutions = []
@@ -204,29 +213,35 @@ any later version.
 
 	def enumerateSolutions(self):
 		# initialize counters
-		for i in range(len(self.solutions)):
-			self.solutions[i] = 0
-    		for j in range(self.nvariables):
-				self.mines[i][j] = 0
+		print 'enumerateSolutions',len(self.solutions),self.nvariables
+		''' Hacky shit '''
+		if len(self.solutions) != 0:
+			for i in range(len(self.solutions)):
+				self.solutions[i] = 0
+	    		for j in range(self.nvariables):
+					self.mines[i][j] = 0
 		# initialize all variables to unset
-		for i in range(nvariables):
+		for i in range(self.nvariables):
 			self.variables[i].testAssignment = -1
 		# index to variable used at each level
 		variableindex = [-1]*self.nvariables
 		# last choice of variable by constrainedness
 		lastchoice =- 1
 		# initialize constraints
-		for i in range(nconstraints):
-			self.constraints[i].updateVariable(NOne)
+		for i in range(self.nconstraints):
+			self.constraints[i].updateVariable(None)
 	
 		# main loop
 		level = 0
 		while True:
+			print 'enumerateSolutions while check',level, self.nvariables, variableindex[level]
+			print 'testAssignments', [var.testAssignment for var in self.variables]
 			if level == self.nvariables:
 				# all variables assigned, enumerate solution
 				m = 0
 				for j in range(self.nvariables):
 					m += self.variables[j].testAssignment
+				print 'enumerate Solutions while loop', m
 				self.solutions[m] += 1
 				if m < self.min: 
 					self.min = m
@@ -243,13 +258,13 @@ any later version.
 				var = None
 				i = 0
 				while var == None and i < self.nconstraints:
-					i += 1
-		    			var = self.constraints[i].suggestUnassignedVariable()
+					var = self.constraints[i].suggestUnassignedVariable()
+		    		i += 1
 				if var != None:
 					# find suggested variable
 					variableindex[level] = self.nvariables
 					variableindex[level] -= 1	
-					while var != variables[variableindex[level]]:
+					while var != self.variables[variableindex[level]]:
 						variableindex[level] -= 1
 					var.testAssignment -= 1 # we re-increment it below
 				else:
@@ -269,7 +284,7 @@ any later version.
 				level -= 1
 			else:
 				# try next value in domain
-				variables[variableindex[level]].testAssignment += 1
+				self.variables[variableindex[level]].testAssignment += 1
 				# update all constraints that have this variables
 				self.nodes[variableindex[level]].updateConstraints()
 				# check constraints

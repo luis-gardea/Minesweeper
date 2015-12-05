@@ -102,13 +102,15 @@ class MineMap(object):
     if mines/2 >= self.rows * self.cols: # Odd parameters
       self.finished = True    # Just punt
     else:
-      k = 0
-      while k < mines: # Place mines randomly
-        x = self.pick(self.cols)
-        y = self.pick(self.rows)
-        if self.mine_map[y][x] >= 0:
-          self.mine_map[y][x] = BOOM
-          k += 1
+      self.mine_map[0][1] = BOOM
+      self.mine_map[2][1] = BOOM
+      # k = 0
+      # while k < mines: # Place mines randomly
+      #   x = self.pick(self.cols)
+      #   y = self.pick(self.rows)
+      #   if self.mine_map[y][x] >= 0:
+      #     self.mine_map[y][x] = BOOM
+      #     k += 1
       self.computeweights();
 
   # Compute weights

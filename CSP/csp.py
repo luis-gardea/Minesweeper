@@ -24,8 +24,9 @@ class CSPSquare(object):
 		self.testAssignment = -1
 
 	def __eq__(self,other):
-		return self.state==other.state and self.boundary_level == other.boundary_level and self.x == other.x and \
-			self.y == other.y and self.testAssignment == other.testAssignment
+		if other == None:
+			return False
+		return self.x == other.x and self.y == other.y
 
 	def toString(self):
 		switch = {UNKNOWN:'U',CONSTRAINED:'C',MARKED:'M'}

@@ -96,7 +96,7 @@ class CSPStrategy(object):
 			# /* Simplify constraints by combining with each other and
 			#  * marking or probing _obvious_ mines and cleared areas.
 			#  */
-			print 'inside while loop'
+			# print 'inside while loop'
 			self.simplifyConstraints()
 			if self.map.done():
 				break
@@ -325,10 +325,11 @@ class CSPStrategy(object):
 						found = True
 						if i != end:
 							# swap i and end
-							tmp = constraints[i]
+							tmp = self.constraints[i]
 							self.constraints[i] = self.constraints[end]
 							self.constraints[end] = tmp
 						break
+				i += 1
 			# if none were found, we have a coupled set in [start,end)
 			if not found:
 				sets.append(solutionset.SolutionSet(self.constraints, start, end - start))
@@ -361,9 +362,10 @@ class CSPStrategy(object):
 				continue
 
 			# // check for empty or simplifiable constraints
-			for i in range(self.nconstraints):
+			i = 0
+			while i < self.nconstraints:
 				# check for empty, eliminate if necessary
-				while self.constraints[i].isEmpty() and i < self.nconstraints:
+				while i < self.nconstraints and self.constraints[i].isEmpty():
 					self.constraints[i] = self.constraints[-1]
 					self.constraints.pop()
 					self.nconstraints -= 1
@@ -383,7 +385,7 @@ class CSPStrategy(object):
 						if self.constraints[i].simplify(self.constraints[j]):
 							print 'simplify returns false'
 							done = False
-						
+				i += 1		
 			if done:
 				break
 			print 'here'
