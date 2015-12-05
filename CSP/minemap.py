@@ -19,6 +19,30 @@ from random import randint
 # // the Free Software Foundation, 59 Temple Place - Suite 330,
 # // Boston, MA 02111-1307, USA.
 
+# /**
+#  * Out of bounds return code.
+#  * @see Map#look
+#  */
+OUT_OF_BOUNDS = -4
+
+# /**
+#  * Marked return code.
+#  * @see Map#look
+#  */
+MARKED = -3
+
+# /**
+#  * Unprobed return code.
+#  * @see Map#look
+#  */
+UNPROBED = -2
+
+# /**
+#  * Boom return code.
+#  * @see Map#look
+#  */
+BOOM = -1
+
 
 # // /**
 # //  * The class Map implements a mine map.  A strategy operates on a mine
@@ -31,30 +55,7 @@ from random import randint
 # //  * @author John D. Ramsdell
 # //  */
 class MineMap(object):
-  # /**
-  #  * Out of bounds return code.
-  #  * @see Map#look
-  #  */
-  OUT_OF_BOUNDS = -4
-
-  # /**
-  #  * Marked return code.
-  #  * @see Map#look
-  #  */
-  MARKED = -3
-
-  # /**
-  #  * Unprobed return code.
-  #  * @see Map#look
-  #  */
-  UNPROBED = -2
-
-  # /**
-  #  * Boom return code.
-  #  * @see Map#look
-  #  */
-  BOOM = -1
-
+  
   # /**
   #  * Create a mine map.
   #  * @param mines number of mines in mine map

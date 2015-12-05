@@ -1,4 +1,5 @@
 import sys
+import minemap
 
 class PGMS(object):
 
@@ -111,7 +112,7 @@ def main(args):
 		# print "Set: %s" % seti
 		wins = 0
 		for n in range(1,trys+1):
-			m = MineMap(mines,rows,cols,realrules)
+			m = minemap.MineMap(mines,rows,cols,realrules)
 			if not hinted:
 				s.play(m)
 			else:
@@ -131,6 +132,7 @@ def main(args):
 	print " Standard deviation: %s" % var**(0.5)
 	print " Stanfard error of the mean: %s" % (var/sets)**(0.5)
 
-
+if __name__ == "__main__":
+    main(sys.argv[1:])
 
 		

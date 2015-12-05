@@ -1,5 +1,5 @@
 import csp
-#import map
+import minemap
 
 # /* Copyright (C) 2001 Chris Studholme
 
@@ -81,7 +81,7 @@ class CSPStrategy(object):
 		cspboard.CreateBoard(self.map)
 
 		# use hint
-		if cspboard.board[hint_column][hint_row].probe(self.map) == Map.BOOM:
+		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
 			return
 
 		if VERBOSE:

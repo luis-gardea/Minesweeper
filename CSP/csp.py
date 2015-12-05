@@ -1,4 +1,4 @@
-import minesweeper
+import minesweeper, constraint 
 
 UNKNOWN = -5
 CONSTRAINED = -4
@@ -34,7 +34,7 @@ class CSPSquare(object):
 	def newConstraint(self):
 		if self.state < 0:
 			return None
-		c = Constraint()
+		c = constraint.Constraint()
 		constant = self.state
 		board = self.board
 		for i in range(self.nx1,self.nx2):
