@@ -72,6 +72,7 @@ class CSPSquare(object):
 
 	def probe(self,mapM):
 		result = mapM.probe(self.x,self.y)
+		print 'Probing',self.x,self.y,'with result:',result
 		self.setState(result)
 		return result
 
@@ -178,7 +179,7 @@ class CSPBoard(object):
 		return result if result!=None else self.enumerateMinBoundary()
 
 	def enumerateUnknown(self):
-		if self.unknown:
+		if self.unknown==0:
 			return None
 		result = []
 		count = 0
@@ -196,7 +197,7 @@ class CSPBoard(object):
 		for x in range(1,len(board)-1):
 			if board[x][0].state<CONSTRAINED:
 				v.append(board[x][0])
-			if board[x][len(board[x]-1)].state<CONSTRAINED:
+			if board[x][len(board[x])-1].state<CONSTRAINED:
 				v.append(board[x][len(board[x])-1])
 		for y in range(1,len(board[0])-1):
 			if board[0][y].state < CONSTRAINED:

@@ -101,6 +101,7 @@ any later version.
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
+		print "should have at least one var", self.nconstraints, self.nvariables
 		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
 		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
 			raise Exception("WRONG ORDER!!!")
@@ -132,8 +133,9 @@ any later version.
 		total = 0
 		count = 0
 		for i in range(self.min, self.max + 1):
-			total += i*self.solutions[i]
-			count += self.solutions[i]
+			total += float(i*self.solutions[i])
+			count += float(self.solutions[i])
+		print self.solutions, self.mines
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
@@ -190,13 +192,13 @@ any later version.
 	    	# for-sure clear
 			self.variables[best].probe(map)
 		else:
-			if VERBOSE:
+			if self.VERBOSE:
 				print("GUESS: " + (100-100*bestcount/self.solutions[self.min]) + "\% CRAPS ...")
 			s = self.variables[best].probe(map)
 			if s < 0:
-				if VERBOSE: print(" FAILED!")
+				if self.VERBOSE: print(" FAILED!")
 				return None
-			if VERBOSE: print(" YEAH!")
+			if self.VERBOSE: print(" YEAH!")
 		return self.variables[best].newConstraint()
 
 	def markMines(self, map):

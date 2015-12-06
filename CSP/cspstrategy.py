@@ -2,6 +2,7 @@
 import csp
 import minemap
 import solutionset
+import sys
 
 # /* Copyright (C) 2001 Chris Studholme
 
@@ -147,7 +148,7 @@ class CSPStrategy(object):
 				#  */
 				for i in range(nsubsets):
 					subsets[i].enumerateSolutions()
-
+					
 				if solving_msg:
 					print(" done.")
 
@@ -162,7 +163,7 @@ class CSPStrategy(object):
 			remaining = self.map.mines_minus_marks()
 			far = cspboard.nonConstrainedCount()
 			far_max = remaining
-			far_expected = remaining
+			far_expected = float(remaining)
 			for i in range(nsubsets):
 				nmin = 0
 				nmax = far
@@ -202,6 +203,7 @@ class CSPStrategy(object):
 			if self.map.done():
 				break;
 			if nsubsets <= 0 and crapshoot:
+				# print 'hit crapshoot'
 				continue
 
 			# /* Mark for-sure mines.  These don't make us any better off 
@@ -214,8 +216,10 @@ class CSPStrategy(object):
 			#  * This is very good for us and we go back to simplification
 			#  * immediately afterwards.
 			#  */
+			# print 'got here'
 			if far_max <= 0 and far > 0:
 				positions = cspboard.enumerateUnknown()
+				print len(positions)
 				for position in positions:
 					position.probe(self.map)
 					self.addConstraint(position.newConstraint())
@@ -228,6 +232,7 @@ class CSPStrategy(object):
 			surething = False
 			for i in range(nsubsets):
 				prob = subsets[i].findBestProbe()
+				print prob, best_prob
 				if prob <= 0:
 					surething = True
 					self.addConstraint(subsets[i].doBestProbe(self.map))
@@ -239,10 +244,11 @@ class CSPStrategy(object):
 
 			# /* If best guess is a constrained position, probe it.
 			#  */
+			print 'best subset length:',best_subset
+			
 			if best_subset >= 0:
 				if VERBOSE:
-					print("GUESS: "+(int)((1-best_prob)*100)+
-						"% educated ...")
+					print("GUESS: "+str(int((1-best_prob)*100))+"% "+category+" ...")
 				c = subsets[best_subset].doBestProbe(self.map)
 				if c != None:
 					self.addConstraint(c)
@@ -254,6 +260,8 @@ class CSPStrategy(object):
 			else:
 				# first check the corners
 				positions = cspboard.enumerateCorners()
+				# print positions
+				# sys.exit(0)
 				category = "corner"
 				if positions == None:
 					# next check for edges
@@ -269,17 +277,16 @@ class CSPStrategy(object):
 					category = "far"
 				if positions == None:
 					print("WHAT!  No boundary or unknown?")
+				if VERBOSE:
+					print("GUESS: "+str(int((1-best_prob)*100))+"% "+category+" ...")
+				i = self.map.pick(len(positions))
+				s = positions[i].probe(self.map)
+				if s >= 0:
+					self.addConstraint(positions[i].newConstraint())
 					if VERBOSE:
-						print("GUESS: "+(int)((1-best_prob)*100)+"% "+
-							category+" ...")
-						i = self.map.pick(len(positions))
-						s = positions[i].probe(self.map)
-						if s >= 0:
-							self.addConstraint(positions[i].newConstraint())
-							if VERBOSE:
-								print(" ok.")
-							elif VERBOSE:
-								print(" FAILED!")
+						print(" ok.")
+				elif VERBOSE:
+					print(" FAILED!")
 
 			#    /*
 			#    if (VERBOSE) {
@@ -319,22 +326,33 @@ class CSPStrategy(object):
 		for end in range(1, self.nconstraints + 1):
 			# search for constraints that are coupled with ones in [start,end)
 			found = False
-			i = end
-			while i < self.nconstraints and not found:
-				for j in range(start, end):
+			# i = end
+			# while i < self.nconstraints and not found:
+			# 	for j in range(start, end):
+			# 		if self.constraints[i].coupledWith(self.constraints[j]):
+			# 			found = True
+			# 			if i != end:
+			# 				# swap i and end
+			# 				tmp = self.constraints[i]
+			# 				self.constraints[i] = self.constraints[end]
+			# 				self.constraints[end] = tmp
+			# 			break
+			for i in range(end,self.nconstraints):
+				if found:
+					break
+				for j in range(start,end):
 					if self.constraints[i].coupledWith(self.constraints[j]):
 						found = True
 						if i != end:
-							# swap i and end
 							tmp = self.constraints[i]
 							self.constraints[i] = self.constraints[end]
 							self.constraints[end] = tmp
 						break
-				i += 1
 			# if none were found, we have a coupled set in [start,end)
 			if not found:
 				sets.append(solutionset.SolutionSet(self.constraints, start, end - start))
 				start = end
+				
 		return sets
 
 	# /**
@@ -366,7 +384,7 @@ class CSPStrategy(object):
 			i = 0
 			while i < self.nconstraints:
 				# check for empty, eliminate if necessary
-				while self.constraints[i].isEmpty() and i < self.nconstraints:
+				while i < self.nconstraints and self.constraints[i].isEmpty():
 					self.constraints[i] = self.constraints[-1]
 					self.constraints.pop()
 					self.nconstraints -= 1
