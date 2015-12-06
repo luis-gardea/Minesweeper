@@ -117,16 +117,16 @@ class MineMap(object):
   def computeweights(self):
     for y in range(self.rows):
       for x in range(self.cols):
-	      if (self.mine_map[y][x] >= 0):
-    		  w = 0;
-    		  y0 = max(0, y - 1)
-    		  y1 = min(self.rows, y + 2)
-    		  x0 = max(0, x - 1)
-    		  x1 = min(self.cols, x + 2)
-    		  for yw in range(y0, y1):
-    		      for xw in range(x0, x1):
-    			      if self.mine_map[yw][xw] < 0: w += 1
-    		  self.mine_map[y][x] = w
+        if (self.mine_map[y][x] >= 0):
+          w = 0;
+          y0 = max(0, y - 1)
+          y1 = min(self.rows, y + 2)
+          x0 = max(0, x - 1)
+          x1 = min(self.cols, x + 2)
+          for yw in range(y0, y1):
+            for xw in range(x0, x1):
+              if self.mine_map[yw][xw] < 0: w += 1
+          self.mine_map[y][x] = w
 
   # /**
   #  * Inefficient recursive floodfill algorithm.  
@@ -249,7 +249,7 @@ class MineMap(object):
           self.mine_map[y][x] = 0
           self.computeweights();
       else:
-	      self.finished = True
+        self.finished = True
 
     self.realrules = False
     return self.mine_map[y][x]

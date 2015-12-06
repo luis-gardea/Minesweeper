@@ -57,7 +57,7 @@ class CSPSquare(object):
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < MARKED:
-					found == False
+					found = False
 					for k in range(nvariables):
 						if board[i][j] == variables[k]:
 							found = True

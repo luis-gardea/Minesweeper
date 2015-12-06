@@ -86,11 +86,11 @@ class Constraint(object):
 		if self.current_constant == self.constant:
 	    	# all mines accounted for (only 0's left)
 			self.next_unassigned.testAssignment = 0
-	    	return self.next_unassigned
+			return self.next_unassigned
 		if self.constant - self.current_constant == self.unassigned: 
 	    	# all remaining vars are mines (1's)
 			self.next_unassigned.testAssignment = 1
-	    	return self.next_unassigned
+			return self.next_unassigned
 		return None
 
 	def updateAndRemoveKnownVariables(self, mapM):
@@ -98,12 +98,12 @@ class Constraint(object):
 		if len(self.variables) != 0:
 			for i in range(len(self.variables)-1,-1,-1):
 				x = self.variables[i].getState()
-		    	if x >= 0:
+				if x >= 0:
 					# clear (remove variable)
 					self.nvariables -= 1
 					self.variables.pop(i)
 					# self.variables[i]=self.variables[self.nvariables]
-		    	elif x == csp.MARKED:
+				elif x == csp.MARKED:
 					# marked (remove variable and decrement constant)
 					self.nvariables -= 1
 					self.variables.pop(i)

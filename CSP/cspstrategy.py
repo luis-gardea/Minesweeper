@@ -1,3 +1,4 @@
+
 import csp
 import minemap
 import solutionset
@@ -165,7 +166,7 @@ class CSPStrategy(object):
 			for i in range(nsubsets):
 				nmin = 0
 				nmax = far
-				for j in range(self.nsubsets):
+				for j in range(nsubsets):
 					if i != j:
 						nmin += subsets[j].getMin()
 						nmax += subsets[j].getMax()
@@ -351,7 +352,7 @@ class CSPStrategy(object):
 			for i in range(self.nconstraints):
 				# print 'nvar',self.constraints[i].nvariables
 				newconstraints = self.constraints[i].updateAndRemoveKnownVariables(self.map)
-				print newconstraints
+				#print newconstraints
 				if newconstraints != None:
 					done = False
 					for j in range(len(newconstraints)):
@@ -365,7 +366,7 @@ class CSPStrategy(object):
 			i = 0
 			while i < self.nconstraints:
 				# check for empty, eliminate if necessary
-				while i < self.nconstraints and self.constraints[i].isEmpty():
+				while self.constraints[i].isEmpty() and i < self.nconstraints:
 					self.constraints[i] = self.constraints[-1]
 					self.constraints.pop()
 					self.nconstraints -= 1
