@@ -56,7 +56,7 @@ any later version.
 		self.nconstraints = nconstraints
 		self.VERBOSE = cspstrategy.VERBOSE
 
-		self.variables = []
+		self.variables = None
 		self.nodes = []
 		self.nvariables = 0
 
@@ -101,10 +101,7 @@ any later version.
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
-		print "should have at least one var", self.nconstraints, self.nvariables
 		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
-		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
-			raise Exception("WRONG ORDER!!!")
 		
 		# create variables array
 		self.variables = []
@@ -112,10 +109,10 @@ any later version.
 			self.variables.append(self.nodes[i].variable)
 
 		# create needed arrays
-		self.solutions = [0]*(self.min+1)
+		self.solutions = [None]*(self.min+1)
 		self.mines = []
 		for i in range(self.min+1):
-			self.mines.append([0]*self.nvariables)
+			self.mines.append([None]*self.nvariables)
 
 	def getVariableCount(self):
 		return self.nvariables
@@ -130,12 +127,13 @@ any later version.
 		return self.max
 
 	def expectedMines(self):
-		total = 0
-		count = 0
+		total = 0.0
+		count = 0.0
 		for i in range(self.min, self.max + 1):
-			total += float(i*self.solutions[i])
-			count += float(self.solutions[i])
-		print self.solutions, self.mines
+			total += i*self.solutions[i]
+			count += self.solutions[i]
+		print 'in expectedMines', self.solutions, total, count
+
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
@@ -144,7 +142,7 @@ any later version.
 				self.solutions[i] = 0
 			self.min = newmin
 		if newmax < self.max:
-			for i in range(newmax + 1, self.max + 1):
+			for i in reversed(range(self.max, newmax)):
 				self.solutions[i] = 0
 			self.max = newmax
 		# NOTE: mines[][] has not been zeroed out (but that's ok)
@@ -210,7 +208,6 @@ any later version.
 			for j in range(self.min, self.max + 1):
 				total += self.mines[j][i]
 			if total == total_solutions:
-				print 'marking'
 				self.variables[i].mark(map)
 
 	def enumerateSolutions(self):
@@ -224,9 +221,12 @@ any later version.
 		for i in range(self.nvariables):
 			self.variables[i].testAssignment = -1
 		# index to variable used at each level
-		variableindex = [-1]*self.nvariables
+		# variableindex = [-1]*self.nvariables
+		variableindex = []
+		for i in range(self.nvariables):
+			variableindex.append(-1)
 		# last choice of variable by constrainedness
-		lastchoice =- 1
+		lastchoice = -1
 		# initialize constraints
 		for i in range(self.nconstraints):
 			self.constraints[i].updateVariable(None)
@@ -254,10 +254,14 @@ any later version.
 			if variableindex[level] < 0:
 				# pick next variable
 				var = None
-				i = 0
-				while var == None and i < self.nconstraints:
+				# i = 0
+				# while var == None and i < self.nconstraints:
+				# 	var = self.constraints[i].suggestUnassignedVariable()
+				# 	i += 1
+				for i in range(self.nconstraints):
+					if var != None:
+						break
 					var = self.constraints[i].suggestUnassignedVariable()
-					i += 1
 				if var != None:
 					# find suggested variable
 					variableindex[level] = self.nvariables

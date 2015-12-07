@@ -90,7 +90,6 @@ class CSPStrategy(object):
 		self.nconstraints = 0
 		for x in range(self.map.cols):
 			for y in range(self.map.rows):
-				# print x,y, self.nconstraints
 				self.addConstraint(cspboard.board[x][y].newConstraint())
 
 		# main loop
@@ -98,7 +97,6 @@ class CSPStrategy(object):
 			# /* Simplify constraints by combining with each other and
 			#  * marking or probing _obvious_ mines and cleared areas.
 			#  */
-			# print 'inside while loop'
 			self.simplifyConstraints()
 			if self.map.done():
 				break
@@ -148,7 +146,7 @@ class CSPStrategy(object):
 				#  */
 				for i in range(nsubsets):
 					subsets[i].enumerateSolutions()
-					
+					# print subsets[i].solutions
 				if solving_msg:
 					print(" done.")
 
@@ -171,7 +169,10 @@ class CSPStrategy(object):
 					if i != j:
 						nmin += subsets[j].getMin()
 						nmax += subsets[j].getMax()
+				print 'before minmax',subsets[i].solutions,'remaining:',remaining,'min:',remaining-nmax,'max:',remaining-nmin
+				print self.map.done()
 				subsets[i].reduceMinMax(remaining - nmax, remaining - nmin)
+				print 'CSPStrategy',subsets[i].solutions
 				far_expected -= subsets[i].expectedMines()
 				far_max -= subsets[i].getMin()
 
@@ -203,7 +204,6 @@ class CSPStrategy(object):
 			if self.map.done():
 				break;
 			if nsubsets <= 0 and crapshoot:
-				# print 'hit crapshoot'
 				continue
 
 			# /* Mark for-sure mines.  These don't make us any better off 
@@ -216,10 +216,8 @@ class CSPStrategy(object):
 			#  * This is very good for us and we go back to simplification
 			#  * immediately afterwards.
 			#  */
-			# print 'got here'
 			if far_max <= 0 and far > 0:
 				positions = cspboard.enumerateUnknown()
-				print len(positions)
 				for position in positions:
 					position.probe(self.map)
 					self.addConstraint(position.newConstraint())
@@ -232,7 +230,6 @@ class CSPStrategy(object):
 			surething = False
 			for i in range(nsubsets):
 				prob = subsets[i].findBestProbe()
-				print prob, best_prob
 				if prob <= 0:
 					surething = True
 					self.addConstraint(subsets[i].doBestProbe(self.map))
@@ -244,7 +241,6 @@ class CSPStrategy(object):
 
 			# /* If best guess is a constrained position, probe it.
 			#  */
-			print 'best subset length:',best_subset
 			
 			if best_subset >= 0:
 				if VERBOSE:
@@ -260,8 +256,6 @@ class CSPStrategy(object):
 			else:
 				# first check the corners
 				positions = cspboard.enumerateCorners()
-				# print positions
-				# sys.exit(0)
 				category = "corner"
 				if positions == None:
 					# next check for edges
@@ -277,6 +271,7 @@ class CSPStrategy(object):
 					category = "far"
 				if positions == None:
 					print("WHAT!  No boundary or unknown?")
+
 				if VERBOSE:
 					print("GUESS: "+str(int((1-best_prob)*100))+"% "+category+" ...")
 				i = self.map.pick(len(positions))
@@ -310,7 +305,6 @@ class CSPStrategy(object):
 	# */
 	def addConstraint(self, c):
 		if c == None:
-			# print 'c is none'
 			return
 		self.constraints.append(c)
 		self.nconstraints += 1
@@ -363,21 +357,16 @@ class CSPStrategy(object):
 		done = False
 		while True:
 			done = True;
-			# print 'in simplify constraints'
 			# // update state of varilables
-			# print self.constraints[0]
 
 			for i in range(self.nconstraints):
-				# print 'nvar',self.constraints[i].nvariables
 				newconstraints = self.constraints[i].updateAndRemoveKnownVariables(self.map)
-				#print newconstraints
 				if newconstraints != None:
 					done = False
 					for j in range(len(newconstraints)):
 						self.addConstraint(newconstraints[j])
 
 			if not done:
-				print 'continuing'
 				continue
 
 			# // check for empty or simplifiable constraints
@@ -389,23 +378,12 @@ class CSPStrategy(object):
 					self.constraints.pop()
 					self.nconstraints -= 1
 
-			# for i in range(self.nconstraints):
-			# 	print 'in simplify constraints'
-			# 	# check for empty, eliminate if necessary
-			# 	while self.constraints[i].isEmpty() and i < self.nconstraints:
-			# 		print 'in while'
-			# 		self.nconstraints -= 1
-			# 		#self.constraints.pop(i)
-			# 		self.constraints[i] = self.constraints[self.nconstraints]
-
 				# // attempt to simplify using all others
 				if i < self.nconstraints:
 					for j in range(i+1, self.nconstraints):
 						if self.constraints[i].simplify(self.constraints[j]):
-							print 'simplify returns false'
 							done = False
 				i += 1		
 			if done:
 				break
-			print 'here'
 			# sys.exit(0)

@@ -63,70 +63,70 @@ class MineMap(object):
   #  * @param columns     columns in map
   #  * @return    a mine map
   #  */
-  def __init__(self, mines, rows, columns, realrules):
-    self.minesLeft = mines
-    self.rows = rows
-    self.cols = columns
-    self.realrules = realrules
+    def __init__(self, mines, rows, columns, realrules):
+        self.minesLeft = mines
+        self.rows = rows
+        self.cols = columns
+        self.realrules = realrules
 
-    self.victory = False
-    self.finished = False
-    
-    # /* mine_map[y][x] = -1, if cell (x, y) contains a mine or
-    #  *                   n, where n is the number of mines in adjacent cells.
-    #  */
-    self.mine_map = []
+        self.victory = False
+        self.finished = False
+        
+        # /* mine_map[y][x] = -1, if cell (x, y) contains a mine or
+        #  *                   n, where n is the number of mines in adjacent cells.
+        #  */
+        self.mine_map = []
 
-    # /* mark_map[y][x] = true when cell (x, y) is marked */
-    self.mark_map = []
+        # /* mark_map[y][x] = true when cell (x, y) is marked */
+        self.mark_map = []
 
-    # /* unprobed_map[y][x] = true when cell (x, y) is not probed
-    # * The code maintains the following relation:
-    # * mark_map[y][x] == true implies unprobed_map[y][x] == true
-    # */
-    self.unprobed_map = []
-    
-    for y in range(self.rows):
-      self.mine_map.append([])
-      self.mark_map.append([])
-      self.unprobed_map.append([])
-      for x in range(self.cols):
-        self.mine_map[y].append([])
-        self.mark_map[y].append([])
-        self.unprobed_map[y].append([])
+        # /* unprobed_map[y][x] = true when cell (x, y) is not probed
+        # * The code maintains the following relation:
+        # * mark_map[y][x] == true implies unprobed_map[y][x] == true
+        # */
+        self.unprobed_map = []
+        
+        for y in range(self.rows):
+            self.mine_map.append([])
+            self.mark_map.append([])
+            self.unprobed_map.append([])
+            for x in range(self.cols):
+                self.mine_map[y].append([])
+                self.mark_map[y].append([])
+                self.unprobed_map[y].append([])
 
-        self.mine_map[y][x] = 0
-        self.mark_map[y][x] = False
-        self.unprobed_map[y][x] = True
-    
-    if mines/2 >= self.rows * self.cols: # Odd parameters
-      self.finished = True    # Just punt
-    else:
-      # self.mine_map[0][1] = BOOM
-      # self.mine_map[2][1] = BOOM
-      k = 0
-      while k < mines: # Place mines randomly
-        x = self.pick(self.cols)
-        y = self.pick(self.rows)
-        if self.mine_map[y][x] >= 0:
-          self.mine_map[y][x] = BOOM
-          k += 1
-      self.computeweights();
+                self.mine_map[y][x] = 0
+                self.mark_map[y][x] = False
+                self.unprobed_map[y][x] = True
+        
+        if mines/2 >= self.rows * self.cols: # Odd parameters
+            self.finished = True    # Just punt
+        else:
+          # self.mine_map[0][1] = BOOM
+          # self.mine_map[2][1] = BOOM
+            k = 0
+            while k < mines: # Place mines randomly
+                x = self.pick(self.cols)
+                y = self.pick(self.rows)
+                if self.mine_map[y][x] >= 0:
+                    self.mine_map[y][x] = BOOM
+                    k += 1
+            self.computeweights();
 
   # Compute weights
-  def computeweights(self):
-    for y in range(self.rows):
-      for x in range(self.cols):
-        if (self.mine_map[y][x] >= 0):
-          w = 0;
-          y0 = max(0, y - 1)
-          y1 = min(self.rows, y + 2)
-          x0 = max(0, x - 1)
-          x1 = min(self.cols, x + 2)
-          for yw in range(y0, y1):
-            for xw in range(x0, x1):
-              if self.mine_map[yw][xw] < 0: w += 1
-          self.mine_map[y][x] = w
+    def computeweights(self):
+        for y in range(self.rows):
+            for x in range(self.cols):
+                if (self.mine_map[y][x] >= 0):
+                    w = 0;
+                    y0 = max(0, y - 1)
+                    y1 = min(self.rows, y + 2)
+                    x0 = max(0, x - 1)
+                    x1 = min(self.cols, x + 2)
+                    for yw in range(y0, y1):
+                        for xw in range(x0, x1):
+                            if self.mine_map[yw][xw] < 0: w += 1
+                    self.mine_map[y][x] = w
 
   # /**
   #  * Inefficient recursive floodfill algorithm.  
@@ -185,34 +185,33 @@ class MineMap(object):
   #  * @param n           a positive number (not checked)
   #  * @return            a nonnegative number less than n
   #  */
-  def pick(self, n):
-    return randint(0, n-1)
+    def pick(self, n):
+        return randint(0, n-1)
   
   # /**
   #  * Has this game been won?
   #  * A game is won if every cell which does not contain a mine has 
   #  * been probed, but no cell with a mine has been probed.
   #  */
-  def won(self):
-    return self.victory
+    def won(self):
+        return self.victory
   
   # /**
   #  * Is this game finished?
   #  * The game is finished if it has been won or if a cell with a 
   #  * mine has been probed.
   #  */
-  def done(self):
-    if self.finished:
-      return True
+    def done(self):
+        if self.finished:
+            return True
 
-    for y in range(self.rows):
-      for x in range(self.cols):
-        if (self.mine_map[y][x] < 0) != self.unprobed_map[y][x]:
-          return False
-
-    self.finished = True
-    self.victory = True
-    return True
+        for y in range(self.rows):
+            for x in range(self.cols):
+                if (self.mine_map[y][x] < 0) != self.unprobed_map[y][x]:
+                    return False
+        self.finished = True
+        self.victory = True
+        return True
 
   # /**
   #  * Probe a cell for a mine.
@@ -228,31 +227,31 @@ class MineMap(object):
   #  * @param x        x coordinate of cell
   #  * @param y        y coordinate of cell
   #  */
-  def probe(self, x, y):
-    if self.finished:
-      return self.look(x, y)
-    elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
-      return OUT_OF_BOUNDS
-    elif self.mark_map[y][x]:
-      return MARKED
-    self.unprobed_map[y][x] = False
-    if self.mine_map[y][x] < 0:
-      if self.realrules:
-	      # find non-mine
-        while True:
-          tx = pick(self.cols)
-          ty = pick(self.rows)
-          if not self.mine_map[ty][tx] < 0:
-            break
-	        # swap
-          self.mine_map[ty][tx] = self.mine_map[y][x]
-          self.mine_map[y][x] = 0
-          self.computeweights();
-      else:
-        self.finished = True
+    def probe(self, x, y):
+        if self.finished:
+            return self.look(x, y)
+        elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
+             return OUT_OF_BOUNDS
+        elif self.mark_map[y][x]:
+            return MARKED
+        self.unprobed_map[y][x] = False
+        if self.mine_map[y][x] < 0:
+            if self.realrules:
+    	      # find non-mine
+                while True:
+                    tx = pick(self.cols)
+                    ty = pick(self.rows)
+                    if not self.mine_map[ty][tx] < 0:
+                        break
+                # swap
+                self.mine_map[ty][tx] = self.mine_map[y][x]
+                self.mine_map[y][x] = 0
+                self.computeweights();
+            else:
+                self.finished = True
 
-    self.realrules = False
-    return self.mine_map[y][x]
+        self.realrules = False
+        return self.mine_map[y][x]
   
   # /**
   #  * Look at a cell.
@@ -268,15 +267,15 @@ class MineMap(object):
   #  * @param x        x coordinate of cell
   #  * @param y        y coordinate of cell
   #  */
-  def look(self, x, y):
-    if x < 0 or x >= self.cols or y < 0 or y >= self.rows:
-      return OUT_OF_BOUNDS
-    elif self.mark_map[y][x]:
-      return MARKED
-    elif self.unprobed_map[y][x]:
-      return UNPROBED
-    else:
-      return self.mine_map[y][x]
+    def look(self, x, y):
+        if x < 0 or x >= self.cols or y < 0 or y >= self.rows:
+            return OUT_OF_BOUNDS
+        elif self.mark_map[y][x]:
+            return MARKED
+        elif self.unprobed_map[y][x]:
+            return UNPROBED
+        else:
+            return self.mine_map[y][x]
 
   # /**
   #  * Mark a cell.
@@ -292,19 +291,19 @@ class MineMap(object):
   #  * @param x        x coordinate of cell
   #  * @param y        y coordinate of cell
   #  */
-  def mark(self, x, y): 
-    if self.finished:
-      return self.look(x, y)
-    elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
-      return OUT_OF_BOUNDS
-    elif self.mark_map[y][x]:
-      return MARKED
-    elif self.unprobed_map[y][x]:
-      self.minesLeft -= 1
-      self.mark_map[y][x] = True
-      return MARKED
-    else:
-      return self.mine_map[y][x]
+    def mark(self, x, y): 
+        if self.finished:
+            return self.look(x, y)
+        elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
+            return OUT_OF_BOUNDS
+        elif self.mark_map[y][x]:
+            return MARKED
+        elif self.unprobed_map[y][x]:
+            self.minesLeft -= 1
+            self.mark_map[y][x] = True
+            return MARKED
+        else:
+            return self.mine_map[y][x]
 
   # /**
   #  * Unmark a cell.
@@ -321,38 +320,38 @@ class MineMap(object):
   #  * @param x        x coordinate of cell
   #  * @param y        y coordinate of cell
   #  */
-  def unmark(self, x, y):
-    if self.finished:
-      return self.look(x, y)
-    elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
-      return OUT_OF_BOUNDS
-    elif self.mark_map[y][x]:
-      self.minesLeft += 1
-      self.mark_map[y][x] = False
-      return UNPROBED
-    elif self.unprobed_map[y][x]:
-      return UNPROBED
-    else:
-      return self.mine_map[y][x]
+    def unmark(self, x, y):
+        if self.finished:
+            return self.look(x, y)
+        elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
+            return OUT_OF_BOUNDS
+        elif self.mark_map[y][x]:
+            self.minesLeft += 1
+            self.mark_map[y][x] = False
+            return UNPROBED
+        elif self.unprobed_map[y][x]:
+            return UNPROBED
+        else:
+            return self.mine_map[y][x]
 
   # /**
   #  * Provide the number of mines minus the 
   #  * number of marks in this mine map.
   #  */ 
-  def mines_minus_marks(self):
-    return self.minesLeft
+    def mines_minus_marks(self):
+        return self.minesLeft
   
   # /**
   #  * Provide the number of rows in this mine map.
   #  */ 
-  def rows(self):
-    return self.rows
+    def rows(self):
+        return self.rows
   
   # /**
   #  * Provide the number of columns in this mine map.
   #  */ 
-  def columns(self):
-    return self.cols
+    def columns(self):
+        return self.cols
 
   # /**
   #  * Display the mine map on the standard output stream.
