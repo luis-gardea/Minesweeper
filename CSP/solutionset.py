@@ -135,7 +135,9 @@ any later version.
 		for i in range(self.min, self.max + 1):
 			total += float(i*self.solutions[i])
 			count += float(self.solutions[i])
-		print self.solutions, self.mines
+		if count == 0:
+			print self.nvariables
+			print self.nconstraints
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
