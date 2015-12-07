@@ -115,8 +115,24 @@ class MineSweeper(object):
                     state.append(self.covered_value)
                 else:
                     state.append(square.value)
-        print state
-        return state    
+        #print state
+        return state
+
+    # returns a vector of the state if the board were rotated 90 degrees clockwise. To
+    # be used for decreasing state space by eliminating similar board configurations
+
+    def rotate_90_clockwise(self, state):
+        rotatedState = []
+        for i in range(self.row_size):
+            for j in range(self.column_size):
+                rotatedState.append(state[self.get_state_index_from_location(self.column_size - j - 1, i)])
+
+
+    def get_state_index_from_location(self, row, col):
+        return row*self.row_size + col
+
+    def get_location_from_state_index(self, index):
+        return index / self.row_size, index % self.row_size
 
     # For the current state of the board, returns a labeling. 
     # Label is the same dimension as State. The numerical value for
@@ -179,7 +195,7 @@ class MineSweeper(object):
     def get_init_state(self):
         state = []
         for i in range(self.row_size*self.column_size):
-            state.append(covered_value)
+            state.append(self.covered_value)
 
         return state
 
@@ -280,8 +296,6 @@ class MineSweeper(object):
 
     def get_square(self, location):
         return self.board[location[0]][location[1]]
-
-
 
 def generate_global_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_data = False):
     X = []
@@ -400,34 +414,94 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, difficulty= 1, 
 
 # Generates a map containing estimated q values for each (state, action) pair,
 # where the action is the location of the next move.
-def generate_state_map(num_total_simulations=100, row=4, col=4, difficulty=1, rewardValue=10, eta=0.1):
+def generate_state_map_by_random_playing(num_total_simulations=100, row=4, col=4, difficulty=1, rewardValue=1):
 
-        numIterations = 0
+    qMap = collections.Counter()
 
-        def getStepSize():
-            return 1.0 / math.sqrt(numIterations)
+    for i in xrange(num_total_simulations):
+        game = MineSweeper(row, col, difficulty)
 
-        qMap = collections.Counter()
+        location = (randint(0, game.row_size-1), randint(0, game.column_size-1))
+        nextMove = game.get_square(location)
+        currentState = game.get_init_state()
+        reward = 0
 
-        for i in xrange(num_total_simulations):
-            game = MineSweeper(row, col, difficulty)
+        while True:
+            reward = rewardValue if not game.is_bomb(nextMove) else -1*rewardValue
+            #print nextMove.location, "reward: ", reward
+            stateAndAction = (tuple(currentState), nextMove.location)
+            qMap[stateAndAction] += reward
+            #print qMap
+            currentState = game.get_next_state(nextMove)
 
-            location = (randint(0, game.row_size), randint(0, game.row_size))
-            nextMove = game.get_square(location)
-            currentState = game.get_init_state()
-            reward = 0
+            if game.gameEnd:
+                break
 
-            while True:
-            
-                reward = rewardValue if not game.is_bomb(nextMove) else -1*rewardValue
-                stateAndAction = (currentState, nextMove.location)
-                qMap[stateAndAction] += getStepSize() * reward
-                game.get_next_state(nextMove)
-
-                if game.gameEnd:
-                    break
-
-                frontier = game.get_frontier()
-                nextMove = random.choice(frontier)
+            frontier = game.get_frontier()
+            nextMove = random.choice(frontier)
 
     return qMap
+
+def generate_state_map_using_label(num_total_simulations=100, row=4, col=4, difficulty=1, reward=1):
+    qMap = collections.Counter()
+
+    cantWin = 0
+    for iterationNo in xrange(num_total_simulations):
+        if iterationNo % 1000 == 0:
+            print "Iteration number: ", iterationNo
+        game = MineSweeper(row, col, difficulty)
+
+        location = (randint(0, game.row_size-1), randint(0, game.column_size-1))
+        nextMove = game.get_square(location)
+        currentState = game.get_next_state(nextMove)
+
+        while not game.gameEnd:
+            label = game.get_label()
+            currentState = game.get_state()
+            listOfCorrectMoveIndexes = []
+            for j in range(len(label)):
+                stateAndAction = (tuple(currentState), game.get_location_from_state_index(j))
+                if label[j] == 1:
+                    qMap[stateAndAction] += reward
+                    listOfCorrectMoveIndexes.append(j)
+
+            if not listOfCorrectMoveIndexes:
+                cantWin += 1
+                break
+
+            index = random.choice(listOfCorrectMoveIndexes)
+            randomCorrectLocation = game.get_location_from_state_index(index)
+            nextMove = game.get_square(randomCorrectLocation)
+            currentState = game.get_next_state(nextMove)
+
+    print "Fraction of games lost due to looking only on frontier", (float(cantWin)/num_total_simulations)
+    return qMap
+
+def getNextMove(qMap, game):
+    bestMoveLocation = (-1, -1)
+    maxQValue = float("-inf")
+
+    possibleMoves = map(lambda x: x.location, game.get_frontier())
+    # print possibleMoves
+    stateAsTuple = tuple(game.get_state())
+    undiscovered = 0
+    discovered = 0
+    for move in possibleMoves:
+        stateAndAction = (stateAsTuple, move)
+        if stateAndAction not in qMap:
+            #print "Undiscovered state"
+            undiscovered += 1
+        else:
+            discovered += 1
+
+        q = qMap[(stateAsTuple, move)]
+        # print "Move: ", move
+        # print "Q value: ", q
+        # print ""
+        if q > maxQValue:
+            bestMoveLocation, maxQValue = move, q
+
+    print "Undiscovered pairs: ", undiscovered
+    print "Discovered pairs: ", discovered
+    print ""
+    return game.get_square(bestMoveLocation)
