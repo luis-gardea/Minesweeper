@@ -1,25 +1,16 @@
 import csp
 import minemap
 
-# /* Copyright (C) 2001 Chris Studholme
- 
-# This file is part of a Constraint Satisfaction Problem (CSP) strategy
-# for Programmer's Minesweeper (PGMS).
- 
-# CSPStrategy is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-# */
- 
-# /**
-#  * List of constraints that all have a particular variable in them.  Used
-#  * by SolutionSet to help optimize the enumerating of solutions.
-#  *
-#  * @see CSPStrategy
-#  * @version March 2001
-#  * @author Chris Studholme
-#  */
+'''
+This implementation of a CSP solver implements the approach outlined in 
+"Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
+the University of Toronto.
+
+@File: constraintlist.py
+@Use: List of constraints that have a particular variable in them, 
+    used by solutionset.py to enumerate solutions 
+'''
+
 class ConstraintList(object):
     # /**
     #  * Construct list with an initial constraint and common variable.

@@ -4,41 +4,24 @@ import minemap
 import solutionset
 import sys
 
-# /* Copyright (C) 2001 Chris Studholme
+'''
+This implementation of a CSP solver implements the approach outlined in 
+"Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
+the University of Toronto.
 
-# This file is part of a Constraint Satisfaction Problem (CSP) strategy
-# for Programmer's Minesweeper (PGMS).
+@File: cspstrategy.py 
+@Use: This class implements the CSP strategy to be used by PGMS
+'''
 
-# CSPStrategy is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-# */
+# If True, will print more messages
+VERBOSE = False
 
-# /**
-#  * Should we print anything to System.out?
-#  */
-VERBOSE = True
-
-# /**
-#  * Threshold for display "solving..." message.  The message is displayed
-#  * if the number of variables minus the number of constraints exceeds
-#  * this threshold.
-#  */
+# Used for a print message
 SOLVE_THRESHOLD = 20
 
-# /**
-#  * Public class CSPStrategy implements minesweeper strategy 
-#  * using CSP techniques.
-#  *
-#  * @version March 2001
-#  * @author Chris Studholme
-#  */
+
 class CSPStrategy(object):
 	
-	# /**
-	# * Default constructor initializes the constraints array.
-	# */
 	def __init__(self):
 		# /**
 		#  * Master list of outstanding constraints.
@@ -58,8 +41,6 @@ class CSPStrategy(object):
 	#  * @param m game to play
 	#  */
 	def play1(self, m):
-		#play(m,m.columns()/2,m.rows()/2);
-		#play(m,m.pick(m.columns()),m.pick(m.rows()));
 		self.play2(m, 0, 0)
 
 	# /**
@@ -80,21 +61,19 @@ class CSPStrategy(object):
 		cspboard = csp.CSPBoard()
 		cspboard.CreateBoard(self.map)
 
-		# use hint
-		
 
 		if VERBOSE:
 			print("================ NEW GAME ================")
-		
+
+		# use hint
 		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
 			return
+
 		# initialize constraints
 		self.nconstraints = 0
 		for x in range(self.map.cols):
 			for y in range(self.map.rows):
 				self.addConstraint(cspboard.board[x][y].newConstraint())
-		# print 'checking constraints vs len',self.constraints, self.nconstraints
-		# sys.exit(0)
 
 		# main loop
 		while not self.map.done():
@@ -171,10 +150,7 @@ class CSPStrategy(object):
 					if i != j:
 						nmin += subsets[j].getMin()
 						nmax += subsets[j].getMax()
-				# print 'before minmax',subsets[i].solutions,'remaining:',remaining,'min:',remaining-nmax,'max:',remaining-nmin
-				# print self.map.done()
 				subsets[i].reduceMinMax(remaining - nmax, remaining - nmin)
-				# print 'CSPStrategy',subsets[i].solutions
 				far_expected -= subsets[i].expectedMines()
 				far_max -= subsets[i].getMin()
 
@@ -182,7 +158,6 @@ class CSPStrategy(object):
 			#  * yeilds negative probabilities.  far_max doesn't have this
 			#  * problem, but doesn't work as well.
 			#  */
-			# //float far_prob = far>0 ? far_max/(float)far : 1;
 			far_prob = far_expected/float(far) if far > 0 else 1
 			if far_prob < 0.01: far_prob = float(0.01)
 
@@ -198,7 +173,6 @@ class CSPStrategy(object):
 					# // again until the constraints are next simplified
 					nsubsets -= 1
 					subsets.pop(i)
-					#subsets[i] = subsets[nsubsets]
 					crapshoot = True
 				elif self.map.done():
 					break
@@ -285,14 +259,6 @@ class CSPStrategy(object):
 				elif VERBOSE:
 					print(" FAILED!")
 
-			#    /*
-			#    if (VERBOSE) {
-			#    System.out.println("Subproblems: "+nsubsets);
-			#    for (int i=0; i<nsubsets; ++i)
-			#	  System.out.println("  "+subsets[i].toString());
-			#    }
-			#    */
-
 		# // miscellaneous stats
 		if VERBOSE and solutionset.largest_nvars > 0:
 			print("Largest System Solved:  "+
@@ -322,17 +288,6 @@ class CSPStrategy(object):
 		for end in range(1, self.nconstraints + 1):
 			# search for constraints that are coupled with ones in [start,end)
 			found = False
-			# i = end
-			# while i < self.nconstraints and not found:
-			# 	for j in range(start, end):
-			# 		if self.constraints[i].coupledWith(self.constraints[j]):
-			# 			found = True
-			# 			if i != end:
-			# 				# swap i and end
-			# 				tmp = self.constraints[i]
-			# 				self.constraints[i] = self.constraints[end]
-			# 				self.constraints[end] = tmp
-			# 			break
 			for i in range(end,self.nconstraints):
 				if found:
 					break
@@ -388,4 +343,3 @@ class CSPStrategy(object):
 				i += 1		
 			if done:
 				break
-			# sys.exit(0)

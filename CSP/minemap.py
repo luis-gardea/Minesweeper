@@ -1,23 +1,32 @@
 from random import randint
 
-# //  Copyright (C) 1995 and 1997 John D. Ramsdell
+'''
+CS 229/221 note: This is a translation that we made of the PGMS
+from Java to Python with some changes.
 
-# // This file is part of Programmer's Minesweeper (PGMS).
+Copyright (C) 1995 and 1997 John D. Ramsdell
 
-# // PGMS is free software; you can redistribute it and/or modify
-# // it under the terms of the GNU General Public License as published by
-# // the Free Software Foundation; either version 2, or (at your option)
-# // any later version.
+This file is part of Programmer's Minesweeper (PGMS).
 
-# // PGMS is distributed in the hope that it will be useful,
-# // but WITHOUT ANY WARRANTY; without even the implied warranty of
-# // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# // GNU General Public License for more details.
+PGMS is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
-# // You should have received a copy of the GNU General Public License
-# // along with PGMS; see the file COPYING.  If not, write to
-# // the Free Software Foundation, 59 Temple Place - Suite 330,
-# // Boston, MA 02111-1307, USA.
+PGMS is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with PGMS; see the file COPYING.  If not, write to
+the Free Software Foundation, 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.
+
+@File: minemap.py 
+@Use: This class implements a mine map. Uses operations like marking 
+    and probing positions as the game is played.
+'''
 
 # /**
 #  * Out of bounds return code.
@@ -44,16 +53,6 @@ UNPROBED = -2
 BOOM = -1
 
 
-# // /**
-# //  * The class Map implements a mine map.  A strategy operates on a mine
-# //  * map. By invoking the operations of probing and marking, the strategy
-# //  * attempts to place the mine map in a state in which every cell that does
-# //  * not contain a mine has been probed, without probing a cell that does
-# //  * contain a mine.
-# //  * @see Strategy
-# //  * @version February 1997
-# //  * @author John D. Ramsdell
-# //  */
 class MineMap(object):
   
   # /**
@@ -73,7 +72,7 @@ class MineMap(object):
         self.finished = False
         
         # /* mine_map[y][x] = -1, if cell (x, y) contains a mine or
-        #  *                   n, where n is the number of mines in adjacent cells.
+        #  * n, where n is the number of mines in adjacent cells.
         #  */
         self.mine_map = []
 
@@ -102,8 +101,6 @@ class MineMap(object):
         if mines/2 >= self.rows * self.cols: # Odd parameters
             self.finished = True    # Just punt
         else:
-          # self.mine_map[0][1] = BOOM
-          # self.mine_map[2][1] = BOOM
             k = 0
             while k < mines: # Place mines randomly
                 x = self.pick(self.cols)
@@ -128,62 +125,11 @@ class MineMap(object):
                             if self.mine_map[yw][xw] < 0: w += 1
                     self.mine_map[y][x] = w
 
-  # /**
-  #  * Inefficient recursive floodfill algorithm.  
-  #  * bitmap[y][x] must be true.
-  #  * @param bitmap array of true values to fill
-  #  * @param sx start x position
-  #  * @param sy start y position
-  #  * @return number of connected true values
-  #  */
-  # def floodfill(self, bitmap, sx, sy):
-  #     sum = 1
-  #     self.bitmap[sy][sx] = False
-  #     for (int y=Math.max(0,sy-1); y<Math.min(r,sy+2); ++y)
-	 #     for (int x=Math.max(0,sx-1); x<Math.min(c,sx+2); ++x)
-	 #      if bitmap[y][x]:
-		#       sum+=floodfill(bitmap,x,y);
-  #     return sum;
-  # }
-
-  # # /**
-  # #  * Get a hint.
-  # #  * @return           two element array of hint (column,row)
-  # #  */
-  # def hint(self):
-  #     boolean[][] possibles = new boolean[r][c];
-  #     boolean done = false;
-  #     for (int i=0; (i<9)&&(!done); ++i) {
-	 #  for (int y = 0; y < r; y++)
-	 #      for (int x = 0; x < c; x++) {
-		#   possibles[y][x] = (mine_map[y][x]==i);
-		#   if (possibles[y][x])
-		#       done=true;
-	 #      }
-  #     }
-  #     if (!done)
-	 #  return null; // should never happen!
-
-  #     // find largest connected component of possibles
-  #     int[] result = new int[2];
-  #     int best=0;
-  #     for (int y = 0; y < r; y++)
-	 #  for (int x = 0; x < c; x++)
-	 #      if (possibles[y][x]) {
-		#   int sum = floodfill(possibles,x,y);
-		#   if (sum>best) {
-		#       best=sum;
-		#       result[0]=x;
-		#       result[1]=y;
-		#   }
-	 #      }
-  #     return result;
-  # }
-
+  
   # /**
   #  * Pick a number at random.
-  #  * @param n           a positive number (not checked)
-  #  * @return            a nonnegative number less than n
+  #  * @param n a positive number (not checked)
+  #  * @return a nonnegative number less than n
   #  */
     def pick(self, n):
         return randint(0, n-1)

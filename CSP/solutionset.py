@@ -4,46 +4,35 @@ import constraintlist
 import cspstrategy
 import sys
 
+'''
+This implementation of a CSP solver implements the approach outlined in 
+"Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
+the University of Toronto.
+
+@File: solutionset.py
+@Use: Instances of this class are used to enumerate all of the solutions
+	to coupled set of Constraint's.  The solutions are found using a
+	backtracking algorithm and statistics about the solutions are kept
+	and sorted into bins based on the number of mines (1's) required for
+	each solution.  Note that individual solutions are not stored.  Instead,
+	for each mine rank, the total number of solutions will be tallied along
+	with the number of instances of each variable equalling 1 (ie. mine).
+
+	From the stats produced, cases where a variable must be 0 or must
+	be 1 can be easily found.  If none of these are found, the probability
+	of a particular variables being 0 or 1 can be calculated.
+
+	If it is found that some solutions require either too many 1's or too
+	few 1's, those solutions can be removed from the solution set with ease.
+
+	In static space, details about the largest CSP solved thus far are
+	maintained.  A CSP's size is considered to be proportional to the
+	number of variables (total number of distinct variables) minus the number
+	of constraints.  The size and number of solutions found for this CSP
+	are recorded for profiling uses. 
+'''
+
 class SolutionSet(object):
-	"""docstring for SolutionSet
-/* Copyright (C) 2001 Chris Studholme
- 
-This file is part of a Constraint Satisfaction Problem (CSP) strategy
-for Programmer's Minesweeper (PGMS).
- 
-CSPStrategy is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
-*/
- 
-/**
- * Instances of this class are used to enumerate all of the solutions
- * to coupled set of Constraint's.  The solutions are found using a
- * backtracking algorithm and statistics about the solutions are kept
- * and sorted into bins based on the number of mines (1's) required for
- * each solution.  Note that individual solutions are not stored.  Instead,
- * for each mine rank, the total number of solutions will be tallied along
- * with the number of instances of each variable equalling 1 (ie. mine).
- *
- * From the stats produced, cases where a variable must be 0 or must
- * be 1 can be easily found.  If none of these are found, the probability
- * of a particular variables being 0 or 1 can be calculated.
- *
- * If it is found that some solutions require either too many 1's or too
- * few 1's, those solutions can be removed from the solution set with ease.
- *
- * In static space, details about the largest CSP solved thus far are
- * maintained.  A CSP's size is considered to be proportional to the
- * number of variables (total number of distinct variables) minus the number
- * of constraints.  The size and number of solutions found for this CSP
- * are recorded for profiling uses. 
- *
- * @see CSPStrategy
- * @version March 2001
- * @author Chris Studholme
- */
-	"""
 
 	def __init__(self, constraints, startIndex = 0, nconstraints = -1):
 		if nconstraints == -1:
@@ -69,20 +58,6 @@ any later version.
 		self.largest_nsols = 0
 		self.VERBOSE = False
 	
-		# tally variables and count maximum mines
-		# for constraint in self.constraints:
-		# 	vararray = constraint.getVariables()
-	 #    	for var in vararray:
-		# 		found = False
-		# 		for node in self.nodes:
-		# 			if node.variable == var:
-		# 				node.addConstraint(constraint)
-		# 				found = True
-		# 				break
-		# 		if not found:
-		# 			self.nvariables += 1
-		#     		self.nodes.append(constraintlist.ConstraintList(constraint, var))
-	 #    	self.min += constraint.getConstant()
 	 	for i in range(self.nconstraints):
 	 		vararray = constraints[i].getVariables()
 	 		for j in range(len(vararray)):
@@ -134,7 +109,6 @@ any later version.
 		for i in range(self.min, self.max + 1):
 			total += i*self.solutions[i]
 			count += self.solutions[i]
-		# print 'in expectedMines', self.solutions, total, count
 
 		return total/count
 
@@ -214,7 +188,6 @@ any later version.
 
 	def enumerateSolutions(self):
 		# initialize counters
-		#print 'enumerateSolutions',len(self.solutions),self.nvariables
 		for i in range(len(self.solutions)):
 			self.solutions[i] = 0
 			for j in range(self.nvariables):
@@ -223,7 +196,6 @@ any later version.
 		for i in range(self.nvariables):
 			self.variables[i].testAssignment = -1
 		# index to variable used at each level
-		# variableindex = [-1]*self.nvariables
 		variableindex = []
 		for i in range(self.nvariables):
 			variableindex.append(-1)
@@ -236,7 +208,6 @@ any later version.
 		# main loop
 		level = 0
 		while True:
-			#print 'testAssignments', [var.testAssignment for var in self.variables]
 			if level == self.nvariables:
 				# all variables assigned, enumerate solution
 				m = 0
@@ -275,7 +246,6 @@ any later version.
 						lastchoice += 1
 					variableindex[level] = lastchoice
 
-			#print 'before assign var', [var.testAssignment for var in self.variables]
 			if self.variables[variableindex[level]].testAssignment > 0:
 				# domain exhausted, reset assignment and go up
 				if variableindex[level] <= lastchoice:
