@@ -1,7 +1,7 @@
 import csp
-import map.Map
+import minemap
 
-class Contraint(object):
+class Constraint(object):
 	"""docstring for Contraint
 
 	Copyright (C) 2001 Chris Studholme
@@ -33,9 +33,9 @@ class Contraint(object):
 	@author Chris Studholme
 	"""
 
-	def __init__(self, constant = None):
+	def __init__(self, constant = 0):
 		self.variables = []
-		self.nvariables = None
+		self.nvariables = 0
 		self.constant = constant
 		self.unassigned = None
 		self.current_constant = None
@@ -70,66 +70,63 @@ class Contraint(object):
 			if var.testAssignment < 0:
 				self.next_unassigned = var
 				self.unassigned += 1
-	    	else var.testAssignment >= 1:
+			elif var.testAssignment >= 1:
 				self.current_constant += 1
-		# for i in range(self.nvariables):
-	 #    	if self.variables[i].testAssignment < 0:
-		# 		self.next_unassigned = self.variables[i]
-		# 		self.unassigned += 1
-	 #    	elif self.variables[i].testAssignment >= 1:
-		# 		self.current_constant += 1
 
-    def isSatisfied(self):
+	def isSatisfied(self):
 		if self.current_constant > self.constant:
-	    	return False
+			return False
 		if self.unassigned > 0:
-	    	return True
+			return True
 		return self.current_constant == self.constant
 
 	def suggestUnassignedVariable(self):
 		if self.next_unassigned == None:
-	    	return None
+			return None
 		if self.current_constant == self.constant:
 	    	# all mines accounted for (only 0's left)
-	    	self.next_unassigned.testAssignment = 0
-	    	return self.next_unassigned
+			self.next_unassigned.testAssignment = 0
+			return self.next_unassigned
 		if self.constant - self.current_constant == self.unassigned: 
 	    	# all remaining vars are mines (1's)
-	    	self.next_unassigned.testAssignment = 1
-	    	return self.next_unassigned
+			self.next_unassigned.testAssignment = 1
+			return self.next_unassigned
 		return None
 
-	def updateAndRemoveKnownvariables(self, map):
+	def updateAndRemoveKnownVariables(self, mapM):
 		# first check for previously known values
-		for var in reversed(self.variables):
-	    	s = var.getState()
-	    	if s >= 0:
-				# clear (remove variable)
-				self.nvariables -= 1
-				self.variables.remove(var)
-	    	elif s == BoardPosition.MARKED:
-				# marked (remove variable and decrement constant)
-				self.nvariables -= 1
-				self.variables.remove(var)
-				self.constant -= 1
+		if len(self.variables) != 0:
+			for i in range(len(self.variables)-1,-1,-1):
+				x = self.variables[i].getState()
+				if x >= 0:
+					# clear (remove variable)
+					self.nvariables -= 1
+					self.variables.pop(i)
+					# self.variables[i]=self.variables[self.nvariables]
+				elif x == csp.MARKED:
+					# marked (remove variable and decrement constant)
+					self.nvariables -= 1
+					self.variables.pop(i)
+					# self.variables[i]=self.variables[self.nvariables]
+					self.constant -= 1
 
 		# if no variables left, return
 		if self.nvariables <= 0:
-	    	return None
+			return None
 
 		# check for all clear or all marked
 		result = []
 		if self.constant == 0:
 	    	# all variables are 0 (no mines)
-	    	for var in self.variables:
-				var.probe(map)
+			for var in self.variables:
+				var.probe(mapM)
 				result.append(var.newConstraint())
 		elif self.constant == self.nvariables:
 	    	# all variables are 1 (are mines)
-	    	for var in self.variables:
-				var.mark(map)
-		else 
-	    	return None
+			for var in self.variables:
+				var.mark(mapM)
+		else: 
+			return None
 
 		# empty constraint
 		self.nvariables=0
@@ -139,30 +136,36 @@ class Contraint(object):
 	def simplify(self, other):
 		if self.nvariables < other.nvariables:
 	    	# Are we a subset of other?  Let other figure it out.
-    		return other.simplify(self)
+			return other.simplify(self)
 
 		# Is other a subset of us?
 		for i in range(other.nvariables):
-	    	for j in range(self.nvariables):
+			for j in range(self.nvariables):
 				if self.variables[j] == other.variables[i]:
-		    		break
+					break
 				elif j >= self.nvariables - 1:
-		    		return False
+					return False
 
 		# remove other's variables from this
-		for i in range(other.nvariables):
-	    	for j in range(self.nvariables):
-				if self.variables[j] == other.variables[i]:
-		    		del variables[j]
-	    			break
+		# for i in range(other.nvariables):
+		# 	for j in range(self.nvariables):
+		# 		if self.variables[j] == other.variables[i]:
+		# 			del variables[j]
+	 #    			break
+		for i in other.variables:
+			for j in self.variables:
+				if i == j:
+					self.nvariables -=1
+					self.variables.remove(i)
+					break
 		self.constant -= other.constant
 		return True
 
 	def coupledWith(self, other):
 		for i in range(other.nvariables):
-	    	for j in range(self.nvariables):
+			for j in range(self.nvariables):
 				if self.variables[j] == other.variables[i]:
-		    		return True
+					return True
 		return False
 
 

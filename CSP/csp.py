@@ -1,4 +1,4 @@
-import minesweeper
+import minesweeper, constraint,sys
 
 UNKNOWN = -5
 CONSTRAINED = -4
@@ -9,50 +9,55 @@ class CSPSquare(object):
 	def __init__(self, x,y, csp):
 		self.state = UNKNOWN
 		self.csp = csp
+		self.board = csp.board
 		self.boundary_level = 0
 		# x and y coordinates of this position
 		self.x = x
 		self.y = y
 		# neighbors have x values in nx1<=x<nx2 and
 		# y values in ny1<=y<ny2
-		self.nx1 = x-1 if x>0 else 0
-		self.nx2 = x+2 if x < len(csp.board)-1 else x+1
+		self.nx1 = x-1 if x > 0 else 0
+		self.nx2 = x+2 if x < csp.cols-1 else x+1
 		self.ny1 = y-1 if y > 0 else 0
-		self.ny2 = y+2 if y < len(csp.board[0]) else y+1
+		self.ny2 = y+2 if y < csp.rows-1 else y+1
 		# For use by SolutionSet and Constraint
 		self.testAssignment = -1
 
 	def __eq__(self,other):
-		return self.state==other.state and self.boundary_level == other.boundary_level and self.x == other.x and \
-			self.y == other.y and self.testAssignment == other.testAssignment
+		if other == None:
+			return False
+		return self.x == other.x and self.y == other.y
 
 	def toString(self):
 		switch = {UNKNOWN:'U',CONSTRAINED:'C',MARKED:'M'}
 		return "(%s,%s,%s)" %  (switch[self.state],self.x,self.y)
 
-	def newConstrain(self):
+	def newConstraint(self):
+		# print self.state
 		if self.state < 0:
 			return None
-		c = Constraint()
+		c = constraint.Constraint()
 		constant = self.state
-		board = self.csp.board
+		board = self.board
+
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < 0:
 					if board[i][j].state == MARKED:
 						constant -= 1
 					else:
+						
 						c.add(board[i][j])
 						board[i][j].setState(CONSTRAINED)
 		c.setConstant(constant)
 		return c
 
 	def neighborsKnownOrInSet(self,variables,nvariables):
-		board = self.csp.board 
+		board = self.board 
 		for i in range(self.nx1,self.nx2):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < MARKED:
-					found == False
+					found = False
 					for k in range(nvariables):
 						if board[i][j] == variables[k]:
 							found = True
@@ -67,6 +72,7 @@ class CSPSquare(object):
 
 	def probe(self,mapM):
 		result = mapM.probe(self.x,self.y)
+		print 'Probing',self.x,self.y,'with result:',result
 		self.setState(result)
 		return result
 
@@ -77,7 +83,7 @@ class CSPSquare(object):
 		if state == self.state:
 			return
 		csp = self.csp
-		board = self.csp.board
+		board = self.board
 		if self.state == UNKNOWN:
 			csp.unknown -= 1
 		elif self.state == CONSTRAINED:
@@ -111,7 +117,7 @@ class CSPSquare(object):
 		
 
 class CSPBoard(object):
-	def __init__(self,mines,total):
+	def __init__(self):
 		self.mine = 0
 		self.unknown = 0
 		self.constrained = 0
@@ -120,9 +126,11 @@ class CSPBoard(object):
 
 	def CreateBoard(self,board):
 		self.board = []
-		for x in range(len(board)):
+		self.rows = board.rows
+		self.cols = board.cols
+		for x in range(board.cols):
 			self.board.append([])
-			for y in range(len(board[0])):
+			for y in range(board.rows):
 				self.board[x].append(CSPSquare(x,y,self))
 				self.unknown += 1
 
@@ -171,7 +179,7 @@ class CSPBoard(object):
 		return result if result!=None else self.enumerateMinBoundary()
 
 	def enumerateUnknown(self):
-		if self.unknown:
+		if self.unknown==0:
 			return None
 		result = []
 		count = 0
@@ -189,7 +197,7 @@ class CSPBoard(object):
 		for x in range(1,len(board)-1):
 			if board[x][0].state<CONSTRAINED:
 				v.append(board[x][0])
-			if board[x][len(board[x]-1)].state<CONSTRAINED:
+			if board[x][len(board[x])-1].state<CONSTRAINED:
 				v.append(board[x][len(board[x])-1])
 		for y in range(1,len(board[0])-1):
 			if board[0][y].state < CONSTRAINED:
