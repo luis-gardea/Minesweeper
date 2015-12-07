@@ -106,9 +106,17 @@ class SolutionSet(object):
 		total = 0.0
 		count = 0.0
 		for i in range(self.min, self.max + 1):
+<<<<<<< HEAD
+			total += float(i*self.solutions[i])
+			count += float(self.solutions[i])
+		if count == 0:
+			print self.nvariables
+			print self.nconstraints
+=======
 			total += i*self.solutions[i]
 			count += self.solutions[i]
 
+>>>>>>> 6f6f5ca87fa288e2d18810cc7b4c68e9361d2652
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
