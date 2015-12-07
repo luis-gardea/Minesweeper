@@ -4,46 +4,35 @@ import constraintlist
 import cspstrategy
 import sys
 
+'''
+This implementation of a CSP solver implements the approach outlined in 
+"Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
+the University of Toronto.
+
+@File: solutionset.py
+@Use: Instances of this class are used to enumerate all of the solutions
+	to coupled set of Constraint's.  The solutions are found using a
+	backtracking algorithm and statistics about the solutions are kept
+	and sorted into bins based on the number of mines (1's) required for
+	each solution.  Note that individual solutions are not stored.  Instead,
+	for each mine rank, the total number of solutions will be tallied along
+	with the number of instances of each variable equalling 1 (ie. mine).
+
+	From the stats produced, cases where a variable must be 0 or must
+	be 1 can be easily found.  If none of these are found, the probability
+	of a particular variables being 0 or 1 can be calculated.
+
+	If it is found that some solutions require either too many 1's or too
+	few 1's, those solutions can be removed from the solution set with ease.
+
+	In static space, details about the largest CSP solved thus far are
+	maintained.  A CSP's size is considered to be proportional to the
+	number of variables (total number of distinct variables) minus the number
+	of constraints.  The size and number of solutions found for this CSP
+	are recorded for profiling uses. 
+'''
+
 class SolutionSet(object):
-	"""docstring for SolutionSet
-/* Copyright (C) 2001 Chris Studholme
- 
-This file is part of a Constraint Satisfaction Problem (CSP) strategy
-for Programmer's Minesweeper (PGMS).
- 
-CSPStrategy is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
-*/
- 
-/**
- * Instances of this class are used to enumerate all of the solutions
- * to coupled set of Constraint's.  The solutions are found using a
- * backtracking algorithm and statistics about the solutions are kept
- * and sorted into bins based on the number of mines (1's) required for
- * each solution.  Note that individual solutions are not stored.  Instead,
- * for each mine rank, the total number of solutions will be tallied along
- * with the number of instances of each variable equalling 1 (ie. mine).
- *
- * From the stats produced, cases where a variable must be 0 or must
- * be 1 can be easily found.  If none of these are found, the probability
- * of a particular variables being 0 or 1 can be calculated.
- *
- * If it is found that some solutions require either too many 1's or too
- * few 1's, those solutions can be removed from the solution set with ease.
- *
- * In static space, details about the largest CSP solved thus far are
- * maintained.  A CSP's size is considered to be proportional to the
- * number of variables (total number of distinct variables) minus the number
- * of constraints.  The size and number of solutions found for this CSP
- * are recorded for profiling uses. 
- *
- * @see CSPStrategy
- * @version March 2001
- * @author Chris Studholme
- */
-	"""
 
 	def __init__(self, constraints, startIndex = 0, nconstraints = -1):
 		if nconstraints == -1:
@@ -69,27 +58,13 @@ any later version.
 		self.largest_nsols = 0
 		self.VERBOSE = False
 	
-		# tally variables and count maximum mines
-		# for constraint in self.constraints:
-		# 	vararray = constraint.getVariables()
-	 #    	for var in vararray:
-		# 		found = False
-		# 		for node in self.nodes:
-		# 			if node.variable == var:
-		# 				node.addConstraint(constraint)
-		# 				found = True
-		# 				break
-		# 		if not found:
-		# 			self.nvariables += 1
-		#     		self.nodes.append(constraintlist.ConstraintList(constraint, var))
-	 #    	self.min += constraint.getConstant()
 	 	for i in range(self.nconstraints):
-	 		vararray = self.constraints[i].getVariables()
+	 		vararray = constraints[i].getVariables()
 	 		for j in range(len(vararray)):
 	 			found = False
 	 			for k in range(self.nvariables):
 	 				if self.nodes[k].variable == vararray[j]:
-	 					self.nodes[k].addConstraint(self.constraints[i])
+	 					self.nodes[k].addConstraint(constraints[i])
 	 					found = True
 	 					break
 	 			if not found:
@@ -101,8 +76,10 @@ any later version.
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
-		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
-		
+		self.nodes = sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
+		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
+			raise Exception('WRONG ORDER!!!')
+
 		# create variables array
 		self.variables = []
 		for i in range(self.nvariables):
@@ -130,10 +107,17 @@ any later version.
 		total = 0.0
 		count = 0.0
 		for i in range(self.min, self.max + 1):
+<<<<<<< HEAD
+			total += float(i*self.solutions[i])
+			count += float(self.solutions[i])
+		if count == 0:
+			print self.nvariables
+			print self.nconstraints
+=======
 			total += i*self.solutions[i]
 			count += self.solutions[i]
-		print 'in expectedMines', self.solutions, total, count
 
+>>>>>>> 6f6f5ca87fa288e2d18810cc7b4c68e9361d2652
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
@@ -167,7 +151,7 @@ any later version.
 		s = self.bestProbe.probe(map)
 		return self.bestProbe.newConstraint() if s >= 0 else None
 
-	def doCrapsShoot(self, map):
+	def doCrapsShoot(self, mapM):
 		if self.min != self.max:
 			return None
 		for i in range(self.nvariables):
@@ -179,27 +163,27 @@ any later version.
 		for i in range(self.nvariables):
 			if self.mines[self.min][i] < bestcount:
 				bestcount = self.mines[self.min][i];
-				best=i
+				best = i
 			elif self.mines[self.min][i] == self.solutions[self.min]:
 				# for-sure mine
-				self.variables[i].mark(map)
+				self.variables[i].mark(mapM)
 		if best < 0:
 	    	# must be all mines
 			return None
 		if bestcount == 0:
 	    	# for-sure clear
-			self.variables[best].probe(map)
+			self.variables[best].probe(mapM)
 		else:
 			if self.VERBOSE:
 				print("GUESS: " + (100-100*bestcount/self.solutions[self.min]) + "\% CRAPS ...")
-			s = self.variables[best].probe(map)
+			s = self.variables[best].probe(mapM)
 			if s < 0:
 				if self.VERBOSE: print(" FAILED!")
 				return None
 			if self.VERBOSE: print(" YEAH!")
 		return self.variables[best].newConstraint()
 
-	def markMines(self, map):
+	def markMines(self, mapM):
 		total_solutions = 0
 		for j in range(self.min, self.max + 1):
 			total_solutions += self.solutions[j]
@@ -208,11 +192,10 @@ any later version.
 			for j in range(self.min, self.max + 1):
 				total += self.mines[j][i]
 			if total == total_solutions:
-				self.variables[i].mark(map)
+				self.variables[i].mark(mapM)
 
 	def enumerateSolutions(self):
 		# initialize counters
-		#print 'enumerateSolutions',len(self.solutions),self.nvariables
 		for i in range(len(self.solutions)):
 			self.solutions[i] = 0
 			for j in range(self.nvariables):
@@ -221,7 +204,6 @@ any later version.
 		for i in range(self.nvariables):
 			self.variables[i].testAssignment = -1
 		# index to variable used at each level
-		# variableindex = [-1]*self.nvariables
 		variableindex = []
 		for i in range(self.nvariables):
 			variableindex.append(-1)
@@ -234,7 +216,6 @@ any later version.
 		# main loop
 		level = 0
 		while True:
-			#print 'testAssignments', [var.testAssignment for var in self.variables]
 			if level == self.nvariables:
 				# all variables assigned, enumerate solution
 				m = 0
@@ -254,10 +235,6 @@ any later version.
 			if variableindex[level] < 0:
 				# pick next variable
 				var = None
-				# i = 0
-				# while var == None and i < self.nconstraints:
-				# 	var = self.constraints[i].suggestUnassignedVariable()
-				# 	i += 1
 				for i in range(self.nconstraints):
 					if var != None:
 						break
@@ -277,7 +254,6 @@ any later version.
 						lastchoice += 1
 					variableindex[level] = lastchoice
 
-			#print 'before assign var', [var.testAssignment for var in self.variables]
 			if self.variables[variableindex[level]].testAssignment > 0:
 				# domain exhausted, reset assignment and go up
 				if variableindex[level] <= lastchoice:

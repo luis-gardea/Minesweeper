@@ -1,28 +1,39 @@
 import sys
 import minemap
 
-class PGMS(object):
+'''
+CS 229/221 note: This is a translation that we made of the PGMS
+from Java to Python with some changes.
 
-	def __init__(self,s = None,mines = 40,rows = 16,cols = 16,hinted = False,realrules = False):
-		self.s = s
-		self.mines = mines
-		self.rows = rows
-		self.cols = cols
-		self.hinted = hinted
-		self.realrules = realrules
+Copyright (C) 1995 and 1997 John D. Ramsdell
 
-	def percent(self,n,d):
-		return (200*n + d)/float(2*d)
+This file is part of Programmer's Minesweeper (PGMS).
 
+PGMS is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
+PGMS is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with PGMS; see the file COPYING.  If not, write to
+the Free Software Foundation, 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.
+
+@File: pgms.py 
+@Use: This program represents the actual Programmer's Minesweeper (PGMS) game 
+'''
 
 def main(args):
-	game = PGMS()
 	strategy_name = "cspstrategy.CSPStrategy"
 	game_name = 'intermediate'
-	mines = 2
-	rows = 3
-	cols = 3
+	mines = 40
+	rows = 16
+	cols = 16
 	hinted = False
 	realrules = False
 	trys = 1
@@ -105,11 +116,11 @@ def main(args):
 	module = __import__(strategy_name.split('.')[0])
 	s = getattr(module,strategy_name.split('.')[1])()
 
-	sumN = 0
-	sumsqr = 0
+	sumN = 0.0
+	sumsqr = 0.0
 	game_count = 0
 	for seti in range(1,sets+1):
-		# print "Set: %s" % seti
+
 		wins = 0
 		for n in range(1,trys+1):
 			m = minemap.MineMap(mines,rows,cols,realrules)
@@ -119,18 +130,20 @@ def main(args):
 				hint = m.hint()
 				s.play2(m,hint[0],hint[1])
 
+			s = getattr(module,strategy_name.split('.')[1])()
 			game_count += 1
 
 			if m.won():
 				wins += 1
+
 		sumN += wins
 		sumsqr += wins**2
+
+	print str(rows), "by", str(cols),"board with", str(mines),"mines"
 	print "In %s sets of %s tries (%s) games total:" % (sets,trys,sets*trys)
-	mean = sumN / float(sets)
+	mean = sumN / sets
 	print " Mean wins: %s/%s (%s percent)" % (mean, trys, int(100.0*mean/trys+0.5) )
-	var = (sumsqr - (sumN**2)/float(sets))/sets
-	print " Standard deviation: %s" % var**(0.5)
-	print " Stanfard error of the mean: %s" % (var/sets)**(0.5)
+	
 
 if __name__ == "__main__":
     main(sys.argv[1:])
