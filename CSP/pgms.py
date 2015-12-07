@@ -20,9 +20,9 @@ def main(args):
 	game = PGMS()
 	strategy_name = "cspstrategy.CSPStrategy"
 	game_name = 'intermediate'
-	mines = 2
-	rows = 3
-	cols = 3
+	mines = 40
+	rows = 16
+	cols = 16
 	hinted = False
 	realrules = False
 	trys = 1
@@ -105,11 +105,11 @@ def main(args):
 	module = __import__(strategy_name.split('.')[0])
 	s = getattr(module,strategy_name.split('.')[1])()
 
-	sumN = 0
-	sumsqr = 0
+	sumN = 0.0
+	sumsqr = 0.0
 	game_count = 0
 	for seti in range(1,sets+1):
-		# print "Set: %s" % seti
+
 		wins = 0
 		for n in range(1,trys+1):
 			m = minemap.MineMap(mines,rows,cols,realrules)
@@ -119,18 +119,20 @@ def main(args):
 				hint = m.hint()
 				s.play2(m,hint[0],hint[1])
 
+			s = getattr(module,strategy_name.split('.')[1])()
 			game_count += 1
 
 			if m.won():
 				wins += 1
+
 		sumN += wins
 		sumsqr += wins**2
+	print sumN,sumsqr
+	print str(rows), "by", str(cols),"board with", str(mines),"mines"
 	print "In %s sets of %s tries (%s) games total:" % (sets,trys,sets*trys)
-	mean = sumN / float(sets)
+	mean = sumN / sets
 	print " Mean wins: %s/%s (%s percent)" % (mean, trys, int(100.0*mean/trys+0.5) )
-	var = (sumsqr - (sumN**2)/float(sets))/sets
-	print " Standard deviation: %s" % var**(0.5)
-	print " Stanfard error of the mean: %s" % (var/sets)**(0.5)
+	
 
 if __name__ == "__main__":
     main(sys.argv[1:])

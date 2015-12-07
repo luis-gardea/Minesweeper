@@ -56,16 +56,16 @@ class ConstraintList(object):
     #  * Update all constraints given that variable has a new test assignment.
     #  */
     def updateConstraints(self):
-        for constraint in self.constraints:
-            constraint.updateVariable(self.variable)
+        for i in range(self.nconstraints):
+            self.constraints[i].updateVariable(self.variable)
 
     # /**
     #  * Check if all constraints are satisfied (or at least think they are).
     #  * @return false if any constraint is not satisfied
     #  */
     def checkConstraints(self):
-        for constraint in self.constraints:
-            if not constraint.isSatisfied():
+        for i in range(self.nconstraints):
+            if not self.constraints[i].isSatisfied():
                 return False
         return True
 

@@ -72,7 +72,7 @@ class CSPSquare(object):
 
 	def probe(self,mapM):
 		result = mapM.probe(self.x,self.y)
-		print 'Probing',self.x,self.y,'with result:',result
+		# print 'Probing',self.x,self.y,'with result:',result
 		self.setState(result)
 		return result
 
@@ -156,7 +156,7 @@ class CSPBoard(object):
 		board = self.board
 		for x in range(len(board)):
 			for y in range(len(board[0])):
-				if (board[x][y].state == UNKNOWN and board.boundary_level > maxN):
+				if (board[x][y].state == UNKNOWN and board[x][y].boundary_level > maxN):
 					maxN = board[x][y].boundary_level
 		if maxN == 0:
 			return None

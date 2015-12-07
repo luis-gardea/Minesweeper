@@ -84,12 +84,12 @@ any later version.
 		#     		self.nodes.append(constraintlist.ConstraintList(constraint, var))
 	 #    	self.min += constraint.getConstant()
 	 	for i in range(self.nconstraints):
-	 		vararray = self.constraints[i].getVariables()
+	 		vararray = constraints[i].getVariables()
 	 		for j in range(len(vararray)):
 	 			found = False
 	 			for k in range(self.nvariables):
 	 				if self.nodes[k].variable == vararray[j]:
-	 					self.nodes[k].addConstraint(self.constraints[i])
+	 					self.nodes[k].addConstraint(constraints[i])
 	 					found = True
 	 					break
 	 			if not found:
@@ -101,8 +101,10 @@ any later version.
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
-		sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
-		
+		self.nodes = sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
+		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
+			raise Exception('WRONG ORDER!!!')
+
 		# create variables array
 		self.variables = []
 		for i in range(self.nvariables):
@@ -132,7 +134,7 @@ any later version.
 		for i in range(self.min, self.max + 1):
 			total += i*self.solutions[i]
 			count += self.solutions[i]
-		print 'in expectedMines', self.solutions, total, count
+		# print 'in expectedMines', self.solutions, total, count
 
 		return total/count
 
@@ -167,7 +169,7 @@ any later version.
 		s = self.bestProbe.probe(map)
 		return self.bestProbe.newConstraint() if s >= 0 else None
 
-	def doCrapsShoot(self, map):
+	def doCrapsShoot(self, mapM):
 		if self.min != self.max:
 			return None
 		for i in range(self.nvariables):
@@ -179,27 +181,27 @@ any later version.
 		for i in range(self.nvariables):
 			if self.mines[self.min][i] < bestcount:
 				bestcount = self.mines[self.min][i];
-				best=i
+				best = i
 			elif self.mines[self.min][i] == self.solutions[self.min]:
 				# for-sure mine
-				self.variables[i].mark(map)
+				self.variables[i].mark(mapM)
 		if best < 0:
 	    	# must be all mines
 			return None
 		if bestcount == 0:
 	    	# for-sure clear
-			self.variables[best].probe(map)
+			self.variables[best].probe(mapM)
 		else:
 			if self.VERBOSE:
 				print("GUESS: " + (100-100*bestcount/self.solutions[self.min]) + "\% CRAPS ...")
-			s = self.variables[best].probe(map)
+			s = self.variables[best].probe(mapM)
 			if s < 0:
 				if self.VERBOSE: print(" FAILED!")
 				return None
 			if self.VERBOSE: print(" YEAH!")
 		return self.variables[best].newConstraint()
 
-	def markMines(self, map):
+	def markMines(self, mapM):
 		total_solutions = 0
 		for j in range(self.min, self.max + 1):
 			total_solutions += self.solutions[j]
@@ -208,7 +210,7 @@ any later version.
 			for j in range(self.min, self.max + 1):
 				total += self.mines[j][i]
 			if total == total_solutions:
-				self.variables[i].mark(map)
+				self.variables[i].mark(mapM)
 
 	def enumerateSolutions(self):
 		# initialize counters
@@ -254,10 +256,6 @@ any later version.
 			if variableindex[level] < 0:
 				# pick next variable
 				var = None
-				# i = 0
-				# while var == None and i < self.nconstraints:
-				# 	var = self.constraints[i].suggestUnassignedVariable()
-				# 	i += 1
 				for i in range(self.nconstraints):
 					if var != None:
 						break

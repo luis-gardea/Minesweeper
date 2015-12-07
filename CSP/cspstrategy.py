@@ -50,6 +50,7 @@ class CSPStrategy(object):
 		#  */
 		self.nconstraints = 0
 
+	
 	# /**
 	#  * Play a non-hinted game.  Starting in a corner seems to be the best
 	#  * strategy and since we assume a random map (as opposed to one
@@ -80,17 +81,20 @@ class CSPStrategy(object):
 		cspboard.CreateBoard(self.map)
 
 		# use hint
-		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
-			return
+		
 
 		if VERBOSE:
 			print("================ NEW GAME ================")
-
+		
+		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
+			return
 		# initialize constraints
 		self.nconstraints = 0
 		for x in range(self.map.cols):
 			for y in range(self.map.rows):
 				self.addConstraint(cspboard.board[x][y].newConstraint())
+		# print 'checking constraints vs len',self.constraints, self.nconstraints
+		# sys.exit(0)
 
 		# main loop
 		while not self.map.done():
@@ -133,20 +137,18 @@ class CSPStrategy(object):
 					if nvars - ncnts >= SOLVE_THRESHOLD:
 						solving_msg = True
 						if nsubsets == 1:
-							print("Solving "+ncnts+" constraint "+
-								nvars+" variable system...")
+							print("Solving "+str(ncnts)+" constraint "+
+								str(nvars)+" variable system...")
 						else:
-							print("Solving " + nsubsets + 
-								" systems (largest is "+
-									+ncnts+" constraints "+nvars+
-									" variables)...")
+							print("Solving " + str(nsubsets) + 
+								" systems (largest is "+str(ncnts)+" constraints "
+									+str(nvars)+" variables)...")
 
 				# /* Solve each of the sub-problems by enumerating all solutions
 				#  * to the constraint satisfaction problem.
 				#  */
 				for i in range(nsubsets):
 					subsets[i].enumerateSolutions()
-					# print subsets[i].solutions
 				if solving_msg:
 					print(" done.")
 
@@ -169,10 +171,10 @@ class CSPStrategy(object):
 					if i != j:
 						nmin += subsets[j].getMin()
 						nmax += subsets[j].getMax()
-				print 'before minmax',subsets[i].solutions,'remaining:',remaining,'min:',remaining-nmax,'max:',remaining-nmin
-				print self.map.done()
+				# print 'before minmax',subsets[i].solutions,'remaining:',remaining,'min:',remaining-nmax,'max:',remaining-nmin
+				# print self.map.done()
 				subsets[i].reduceMinMax(remaining - nmax, remaining - nmin)
-				print 'CSPStrategy',subsets[i].solutions
+				# print 'CSPStrategy',subsets[i].solutions
 				far_expected -= subsets[i].expectedMines()
 				far_max -= subsets[i].getMin()
 
@@ -244,7 +246,7 @@ class CSPStrategy(object):
 			
 			if best_subset >= 0:
 				if VERBOSE:
-					print("GUESS: "+str(int((1-best_prob)*100))+"% "+category+" ...")
+					print("GUESS: "+str(int((1-best_prob)*100))+"% educated ...")
 				c = subsets[best_subset].doBestProbe(self.map)
 				if c != None:
 					self.addConstraint(c)
