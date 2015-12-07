@@ -38,11 +38,10 @@ class SolutionSet(object):
 		if nconstraints == -1:
 			nconstraints = len(constraints)
 
-		self.construct(constraints[startIndex:], nconstraints)
+		self.construct(constraints[startIndex:startIndex+nconstraints])
 
-	def construct(self, constraints, nconstraints):
+	def construct(self, constraints):
 		self.constraints = constraints
-		self.nconstraints = nconstraints
 		self.VERBOSE = cspstrategy.VERBOSE
 
 		self.variables = None
@@ -58,7 +57,7 @@ class SolutionSet(object):
 		self.largest_nsols = 0
 		self.VERBOSE = False
 	
-	 	for i in range(self.nconstraints):
+	 	for i in range(len(self.constraints)):
 	 		vararray = constraints[i].getVariables()
 	 		for j in range(len(vararray)):
 	 			found = False
@@ -76,8 +75,8 @@ class SolutionSet(object):
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
-		self.nodes = sorted(self.nodes, key = lambda constraintList: constraintList.nconstraints, reverse = True)
-		if self.nodes[0].nconstraints < self.nodes[self.nvariables-1].nconstraints:
+		self.nodes = sorted(self.nodes, key = lambda constraintList: len(constraintList.constraints), reverse = True)
+		if len(self.nodes[0].constraints) < len(self.nodes[self.nvariables-1].constraints):
 			raise Exception('WRONG ORDER!!!')
 
 		# create variables array
@@ -95,7 +94,7 @@ class SolutionSet(object):
 		return self.nvariables
 
 	def getConstraintCount(self):
-		return self.nconstraints
+		return len(self.constraints)
 
 	def getMin(self):
 		return self.min
@@ -202,7 +201,7 @@ class SolutionSet(object):
 		# last choice of variable by constrainedness
 		lastchoice = -1
 		# initialize constraints
-		for i in range(self.nconstraints):
+		for i in range(len(self.constraints)):
 			self.constraints[i].updateVariable(None)
 	
 		# main loop
@@ -227,7 +226,7 @@ class SolutionSet(object):
 			if variableindex[level] < 0:
 				# pick next variable
 				var = None
-				for i in range(self.nconstraints):
+				for i in range(len(self.constraints)):
 					if var != None:
 						break
 					var = self.constraints[i].suggestUnassignedVariable()
@@ -267,9 +266,9 @@ class SolutionSet(object):
 				break
 
 		# check if this was the largest system solved
-		if self.nvariables - self.nconstraints > self.largest_nvars - self.largest_neqns:
+		if self.nvariables - len(self.constraints) > self.largest_nvars - self.largest_neqns:
 			self.largest_nvars = self.nvariables
-			self.largest_neqns = self.nconstraints
+			self.largest_neqns = len(self.constraints)
 			self.largest_nsols = 0
 			for solution in self.solutions:
 				self.largest_nsols += solution		
