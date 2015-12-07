@@ -2,7 +2,7 @@ import minesweeper
 from random import randint
 
 numLearningIterations = 10000
-numPlayingIterations = 10
+numPlayingIterations = 1000
 numRows = 4
 numCols = 4
 difficulty = 1
