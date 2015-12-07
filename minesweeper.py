@@ -72,6 +72,10 @@ class MineSweeper(object):
                 self.board[row].append(Square((row, col)))         
     
         if difficulty == 1:
+            if row * column < 10:
+                self.bomb_number = 2
+            if row*column < 20:
+                self.bomb_number = 3
             if row * column < 30:           
                 self.bomb_number = 5                        
             elif row * column < 100:
@@ -126,7 +130,6 @@ class MineSweeper(object):
         for i in range(self.row_size):
             for j in range(self.column_size):
                 rotatedState.append(state[self.get_state_index_from_location(self.column_size - j - 1, i)])
-
 
     def get_state_index_from_location(self, row, col):
         return row*self.row_size + col
@@ -413,7 +416,9 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, difficulty= 1, 
     return X, Y
 
 # Generates a map containing estimated q values for each (state, action) pair,
-# where the action is the location of the next move.
+# where the action is the location of the next move. Generates this by playing
+# random moves from the frontier, and recording whether or not they result in
+# finding a mine.
 def generate_state_map_by_random_playing(num_total_simulations=100, row=4, col=4, difficulty=1, rewardValue=1):
 
     qMap = collections.Counter()
@@ -442,6 +447,11 @@ def generate_state_map_by_random_playing(num_total_simulations=100, row=4, col=4
 
     return qMap
 
+# Generates a map containing estimated q values for each (state, action) pair,
+# where the action is the location of the next move. Generates this by picking
+# a random move from the frontier, then by inputting all correct moves into the 
+# map. Picks a random correct move and repeats. Performs better than the alternative
+# using random playing, presumably because it gathers more data.
 def generate_state_map_using_label(num_total_simulations=100, row=4, col=4, difficulty=1, reward=1):
     qMap = collections.Counter()
 

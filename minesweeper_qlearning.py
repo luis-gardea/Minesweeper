@@ -1,8 +1,8 @@
 import minesweeper
 from random import randint
 
-numLearningIterations = 10000
-numPlayingIterations = 1000
+numLearningIterations = 5000000
+numPlayingIterations = 10000
 numRows = 4
 numCols = 4
 difficulty = 1
@@ -41,6 +41,10 @@ for i in xrange(numPlayingIterations):
 	randomLocation = (randint(0, game.row_size-1), randint(0, game.column_size-1))
 	firstMove =  game.get_square(randomLocation)
 
+	while game.is_bomb(firstMove):
+		randomLocation = (randint(0, game.row_size-1), randint(0, game.column_size-1))
+		firstMove =  game.get_square(randomLocation)		
+
 	currentState = game.get_next_state(firstMove)
 
 	while not game.gameEnd:
@@ -58,7 +62,7 @@ for i in xrange(numPlayingIterations):
 	numGames += 1
 
 
-print numWins
+#print numWins
 successRate = (float(numWins)/numGames)*100
 print "Played %d games, winning %f%% of the time." % (numPlayingIterations, successRate)
 print "Cleared an average of %f%% of the board." % (avgPercentTilesCleared*100)
