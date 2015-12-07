@@ -1,37 +1,29 @@
 import csp
 import minemap
+import sys
 
-class Constraint(object):
-	"""docstring for Contraint
+'''
+This implementation of a CSP solver implements the approach outlined in 
+"Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
+the University of Toronto.
 
-	Copyright (C) 2001 Chris Studholme
- 
-	This file is part of a Constraint Satisfaction Problem (CSP) strategy
-	for Programmer's Minesweeper (PGMS).
- 
-	CSPStrategy is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2, or (at your option)
-	any later version.
-
- 	Class to represent a single constraint.  A constraint consists of a bunch
- 	of boolean variables (0 or 1) summed together on one side of an equal
- 	sign with an integer constant on the other side.  The number of variables
- 	will usually be in the range 1 to 8 and thus the constant should also be 
- 	in this range.  
+@File: constraint.py
+@Use: Class to represent a single constraint.  A constraint consists of a bunch
+	of boolean variables (0 or 1) summed together on one side of an equal
+	sign with an integer constant on the other side.  The number of variables
+	will usually be in the range 1 to 8 and thus the constant should also be 
+	in this range.  
 
 	Two special cases: if the constant is 0, all variables must be 0; and if 
 	the constant equals the number of variables, all variables must be 1.
 
 	Every clear board position will have one constraint associated with it.  
-	The method BoardPosition.newConstraint() should be used to automatically
+	The method (CSPSquare).newConstraint() should be used to automatically
 	construct these constraints.  A constraint is usually "thrown away" once
 	all its variables are known (either 0 or 1).
+'''
 
-	@see CSPStrategy
-	@version March 2001
-	@author Chris Studholme
-	"""
+class Constraint(object):
 
 	def __init__(self, constant = 0):
 		self.variables = []
@@ -56,21 +48,22 @@ class Constraint(object):
 
 	def getConstant(self):
 		if self.constant < 0:
+			print self.constant
 			raise Exception('Bad constant')
 		return self.constant
 
 	def isEmpty(self):
-		return self.constant <= 0
+		return self.nvariables <= 0
 
 	def updateVariable(self, var):
 		self.current_constant = 0
 		self.unassigned = 0
 		self.next_unassigned = None
-		for var in self.variables:
-			if var.testAssignment < 0:
-				self.next_unassigned = var
+		for i in range(self.nvariables):
+			if self.variables[i].testAssignment < 0:
+				self.next_unassigned = self.variables[i]
 				self.unassigned += 1
-			elif var.testAssignment >= 1:
+			elif self.variables[i].testAssignment >= 1:
 				self.current_constant += 1
 
 	def isSatisfied(self):
@@ -95,20 +88,18 @@ class Constraint(object):
 
 	def updateAndRemoveKnownVariables(self, mapM):
 		# first check for previously known values
-		if len(self.variables) != 0:
-			for i in range(len(self.variables)-1,-1,-1):
-				x = self.variables[i].getState()
-				if x >= 0:
-					# clear (remove variable)
-					self.nvariables -= 1
-					self.variables.pop(i)
-					# self.variables[i]=self.variables[self.nvariables]
-				elif x == csp.MARKED:
-					# marked (remove variable and decrement constant)
-					self.nvariables -= 1
-					self.variables.pop(i)
-					# self.variables[i]=self.variables[self.nvariables]
-					self.constant -= 1
+		
+		for i in reversed(range(0,self.nvariables)):
+			s = self.variables[i].getState()
+			if s >= 0:
+				# clear (remove variable)
+				self.nvariables -= 1
+				self.variables.pop(i)
+			elif s == csp.MARKED:
+				# marked (remove variable and decrement constant)
+				self.nvariables -= 1
+				self.variables.pop(i)
+				self.constant -= 1
 
 		# if no variables left, return
 		if self.nvariables <= 0:
@@ -118,13 +109,13 @@ class Constraint(object):
 		result = []
 		if self.constant == 0:
 	    	# all variables are 0 (no mines)
-			for var in self.variables:
-				var.probe(mapM)
-				result.append(var.newConstraint())
+			for i in range(self.nvariables):
+				self.variables[i].probe(mapM)
+				result.append(self.variables[i].newConstraint())
 		elif self.constant == self.nvariables:
 	    	# all variables are 1 (are mines)
-			for var in self.variables:
-				var.mark(mapM)
+			for i in range(self.nvariables):
+				self.variables[i].mark(mapM)
 		else: 
 			return None
 
@@ -147,16 +138,11 @@ class Constraint(object):
 					return False
 
 		# remove other's variables from this
-		# for i in range(other.nvariables):
-		# 	for j in range(self.nvariables):
-		# 		if self.variables[j] == other.variables[i]:
-		# 			del variables[j]
-	 #    			break
-		for i in other.variables:
-			for j in self.variables:
-				if i == j:
+		for i in range(other.nvariables):
+			for j in range(self.nvariables):
+				if self.variables[j] == other.variables[i]:
 					self.nvariables -=1
-					self.variables.remove(i)
+					self.variables.pop(j)
 					break
 		self.constant -= other.constant
 		return True

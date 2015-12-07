@@ -1,4 +1,25 @@
-import minesweeper, constraint,sys
+import constraint, sys
+
+'''
+This implementation of a CSP solver implements the approach outlined in 
+"Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
+the University of Toronto.
+
+@File: csp.py
+@Use: Contains two classes, CSPSquare and CSPBoard
+
+@CSPSquare: This class represents a single position on the Minesweeper board.
+	It will have one of 4 states, which are unknown, unknown but constrained
+	by a neighboring position, marked as a mine, or clear, which will indicate 
+	the number of neighboring mines as in regular Minesweeper.
+	For unknown but not constrained positions, a count of the number of 
+	neighbouring constrained positions is maintained.  Note that if one of 
+ 	these positions is later found to be a mine, the count will decrease.
+ 	testAssignment is a field used by solutionset and constraint to solve the game.
+
+@CSPBoard: This class keeps track of the number of CSPSquares that are unknown,
+	mines, constrained, or clear. It also keeps track of the board.
+'''
 
 UNKNOWN = -5
 CONSTRAINED = -4
@@ -72,7 +93,6 @@ class CSPSquare(object):
 
 	def probe(self,mapM):
 		result = mapM.probe(self.x,self.y)
-		print 'Probing',self.x,self.y,'with result:',result
 		self.setState(result)
 		return result
 
@@ -146,7 +166,6 @@ class CSPBoard(object):
 				if (board[x][y].state == UNKNOWN and board[x][y].boundary_level == level):
 					count += 1
 					result.append(board[x][y])
-		# Could return None or [] depending on use
 		if count == 0:
 			return None
 		return result
@@ -156,7 +175,7 @@ class CSPBoard(object):
 		board = self.board
 		for x in range(len(board)):
 			for y in range(len(board[0])):
-				if (board[x][y].state == UNKNOWN and board.boundary_level > maxN):
+				if (board[x][y].state == UNKNOWN and board[x][y].boundary_level > maxN):
 					maxN = board[x][y].boundary_level
 		if maxN == 0:
 			return None
@@ -167,7 +186,6 @@ class CSPBoard(object):
 		board = self.board
 		for x in range(len(board)):
 			for y in range(len(board[0])):
-				# Try with boundary level >= 0 later...
 				if (board[x][y].state==UNKNOWN and board[x][y].boundary_level>0 and board[x][y].boundary_level<minN):
 					minN = board[x][y].boundary_level
 		if minN == 1000:
