@@ -101,14 +101,8 @@ def main(args):
 				cont = True
 		elif args[i] == '-v':
 			module.VERBOSE = True
-		elif args[i] == '-real':
-			if i+1 >= len(args):
-				raise Exception("Wrong input")
-			else:
-				if args[i+1] == ('y' or 'Y'):
-					realrules = True
-				elif args[i+1] == ('n' or 'N'):
-					realrules = False
+		elif args[i] == '-noreal':
+			realrules = False
 		else:
 			raise Exception("Wrong input")
 
@@ -148,11 +142,16 @@ def main(args):
 	print str(rows), "by", str(cols),"board with", str(mines),"mines"
 	print "In %s sets of %s tries (%s) games total:" % (sets,trys,sets*trys)
 	mean = sumN / sets
-	print " Mean wins: %s/%s (%s%%)" % (int(mean), trys, int(100.0*mean/trys+0.5) )
-	print " Mean %% of board cleared: %s/%s (%s%%)" % (int(numCleared),int(numTotal),int(100*numCleared/numTotal))
+	print " Mean wins: %s/%s (%s%%)" % (int(mean), trys, 100.0*mean/trys )
+	print " Mean %% of board cleared: %s/%s (%s%%)" % (int(numCleared),int(numTotal),100*numCleared/numTotal)
 	
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    # main(sys.argv[1:])
+    main("-n 10000 -m 23 -r 12 -c 12".split())
+    main("-n 10000 -m 63 -r 20 -c 20".split())
+    main("-n 10000 -m 123 -r 28 -c 28".split())
+    
+
 
 		
