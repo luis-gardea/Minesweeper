@@ -1,4 +1,3 @@
-
 import csp
 import minemap
 import solutionset
@@ -23,15 +22,8 @@ SOLVE_THRESHOLD = 20
 class CSPStrategy(object):
 	
 	def __init__(self):
-		# /**
-		#  * Master list of outstanding constraints.
-		#  */
+		# list of constraints remaining
 		self.constraints = []
-
-		# /**
-		#  * Number of non-null entries in the constraints array.
-		#  */
-		self.nconstraints = 0
 
 	
 	# /**
@@ -66,11 +58,14 @@ class CSPStrategy(object):
 			print("================ NEW GAME ================")
 
 		# use hint
-		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
+		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM and m.realrules:
+			map2 = minemap.MineMap(m.mines,m.rows,m.cols,m.realrules)
+			self.play2(map2,hint_column,hint_row)
+			m.cleared = map2.cleared
+			m.victory = map2.victory
 			return
 
 		# initialize constraints
-		self.nconstraints = 0
 		for x in range(self.map.cols):
 			for y in range(self.map.rows):
 				self.addConstraint(cspboard.board[x][y].newConstraint())
@@ -275,7 +270,6 @@ class CSPStrategy(object):
 		if c == None:
 			return
 		self.constraints.append(c)
-		self.nconstraints += 1
 
 	# /**
 	#  * Seperate the constraints into coupled subsets and create a new
@@ -285,10 +279,10 @@ class CSPStrategy(object):
 	def seperateConstraints(self):
 		sets = []
 		start = 0
-		for end in range(1, self.nconstraints + 1):
+		for end in range(1, len(self.constraints) + 1):
 			# search for constraints that are coupled with ones in [start,end)
 			found = False
-			for i in range(end,self.nconstraints):
+			for i in range(end,len(self.constraints)):
 				if found:
 					break
 				for j in range(start,end):
@@ -316,7 +310,7 @@ class CSPStrategy(object):
 			done = True;
 			# // update state of varilables
 
-			for i in range(self.nconstraints):
+			for i in range(len(self.constraints)):
 				newconstraints = self.constraints[i].updateAndRemoveKnownVariables(self.map)
 				if newconstraints != None:
 					done = False
@@ -328,16 +322,15 @@ class CSPStrategy(object):
 
 			# // check for empty or simplifiable constraints
 			i = 0
-			while i < self.nconstraints:
+			while i < len(self.constraints):
 				# check for empty, eliminate if necessary
-				while i < self.nconstraints and self.constraints[i].isEmpty():
+				while i < len(self.constraints) and self.constraints[i].isEmpty():
 					self.constraints[i] = self.constraints[-1]
 					self.constraints.pop()
-					self.nconstraints -= 1
 
 				# // attempt to simplify using all others
-				if i < self.nconstraints:
-					for j in range(i+1, self.nconstraints):
+				if i < len(self.constraints):
+					for j in range(i+1, len(self.constraints)):
 						if self.constraints[i].simplify(self.constraints[j]):
 							done = False
 				i += 1		

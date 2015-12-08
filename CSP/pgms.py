@@ -1,5 +1,4 @@
-import sys
-import minemap
+import minemap, sys
 
 '''
 CS 229/221 note: This is a translation that we made of the PGMS
@@ -35,9 +34,10 @@ def main(args):
 	rows = 16
 	cols = 16
 	hinted = False
-	realrules = False
+	realrules = True
 	trys = 1
 	sets = 1
+	module = __import__(strategy_name.split('.')[0])
 
 	cont = False
 	for i in range(len(args)):
@@ -65,64 +65,69 @@ def main(args):
 			cols = 8
 		elif args[i] == '-r':
 			if i+1 >= len(args):
-				print "Wrong input"
-				sys.exit(0)
+				raise Exception("Wrong input")
 			else:
 				rows = int(args[i+1])
 				cont = True
 		elif args[i] == '-c':
 			if i+1 >= len(args):
-				print "Wrong input"
-				sys.exit(0)
+				raise Exception("Wrong input")
 			else:
 				cols = int(args[i+1])
 				cont = True
 		elif args[i] == '-m':
 			if i+1 >= len(args):
-				print "Wrong input"
-				sys.exit(0)
+				raise Exception("Wrong input")
 			else:
 				mines = int(args[i+1])
 				cont = True
 		elif args[i] == '-s':
 			if i+1 >= len(args):
-				print "Wrong input"
-				sys.exit(0)
+				raise Exception("Wrong input")
 			else:
 				strategy_name = args[i+1]
 				cont = True
 		elif args[i] == '-n':
 			if i+1 >= len(args):
-				print "Wrong input"
-				sys.exit(0)
+				raise Exception("Wrong input")
 			else:
 				trys = int(args[i+1])
 				cont = True
 		elif args[i] == '-S':
 			if i+1 >= len(args):
-				print "Wrong input"
-				sys.exit(0)
+				raise Exception("Wrong input")
 			else:
 				sets = int(args[i+1])
 				cont = True
+		elif args[i] == '-v':
+			module.VERBOSE = True
+		elif args[i] == '-real':
+			if i+1 >= len(args):
+				raise Exception("Wrong input")
+			else:
+				if args[i+1] == ('y' or 'Y'):
+					realrules = True
+				elif args[i+1] == ('n' or 'N'):
+					realrules = False
 		else:
-			print "Wrong input"
-			sys.exit(0)
+			raise Exception("Wrong input")
 
-	if rows < 1 or cols < 1 or mines < 1:
-		print "Wrong input"
-		sys.exit(0)
+	if rows < 1 or cols < 1 or mines < 1 or mines >= rows*cols:
+		raise Exception("Wrong input")
 
-	module = __import__(strategy_name.split('.')[0])
-	s = getattr(module,strategy_name.split('.')[1])()
+	
+	
 
 	sumN = 0.0
 	sumsqr = 0.0
+	numCleared = 0.0
+	numTotal = 0.0
 	game_count = 0
 	for seti in range(1,sets+1):
 
 		wins = 0
 		for n in range(1,trys+1):
+			s = getattr(module,strategy_name.split('.')[1])()
 			m = minemap.MineMap(mines,rows,cols,realrules)
 			if not hinted:
 				s.play1(m)
@@ -130,11 +135,12 @@ def main(args):
 				hint = m.hint()
 				s.play2(m,hint[0],hint[1])
 
-			s = getattr(module,strategy_name.split('.')[1])()
 			game_count += 1
 
 			if m.won():
 				wins += 1
+			numCleared += m.cleared
+			numTotal += cols*rows - mines
 
 		sumN += wins
 		sumsqr += wins**2
@@ -142,7 +148,8 @@ def main(args):
 	print str(rows), "by", str(cols),"board with", str(mines),"mines"
 	print "In %s sets of %s tries (%s) games total:" % (sets,trys,sets*trys)
 	mean = sumN / sets
-	print " Mean wins: %s/%s (%s percent)" % (mean, trys, int(100.0*mean/trys+0.5) )
+	print " Mean wins: %s/%s (%s%%)" % (int(mean), trys, int(100.0*mean/trys+0.5) )
+	print " Mean %% of board cleared: %s/%s (%s%%)" % (int(numCleared),int(numTotal),int(100*numCleared/numTotal))
 	
 
 if __name__ == "__main__":
