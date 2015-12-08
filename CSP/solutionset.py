@@ -8,7 +8,6 @@ import sys
 This implementation of a CSP solver implements the approach outlined in 
 "Minesweeper as a Constraint Satisfaction Problem" by Chris Studholme, Ph.D from 
 the University of Toronto.
-
 @File: solutionset.py
 @Use: Instances of this class are used to enumerate all of the solutions
 	to coupled set of Constraint's.  The solutions are found using a
@@ -17,14 +16,11 @@ the University of Toronto.
 	each solution.  Note that individual solutions are not stored.  Instead,
 	for each mine rank, the total number of solutions will be tallied along
 	with the number of instances of each variable equalling 1 (ie. mine).
-
 	From the stats produced, cases where a variable must be 0 or must
 	be 1 can be easily found.  If none of these are found, the probability
 	of a particular variables being 0 or 1 can be calculated.
-
 	If it is found that some solutions require either too many 1's or too
 	few 1's, those solutions can be removed from the solution set with ease.
-
 	In static space, details about the largest CSP solved thus far are
 	maintained.  A CSP's size is considered to be proportional to the
 	number of variables (total number of distinct variables) minus the number
@@ -107,17 +103,9 @@ class SolutionSet(object):
 		total = 0.0
 		count = 0.0
 		for i in range(self.min, self.max + 1):
-<<<<<<< HEAD
-			total += float(i*self.solutions[i])
-			count += float(self.solutions[i])
-		if count == 0:
-			print self.nvariables
-			print self.nconstraints
-=======
 			total += i*self.solutions[i]
 			count += self.solutions[i]
 
->>>>>>> 6f6f5ca87fa288e2d18810cc7b4c68e9361d2652
 		return total/count
 
 	def reduceMinMax(self, newmin, newmax):
@@ -280,4 +268,4 @@ class SolutionSet(object):
 			self.largest_neqns = self.nconstraints
 			self.largest_nsols = 0
 			for solution in self.solutions:
-				self.largest_nsols += solution		
+				self.largest_nsols += solution	

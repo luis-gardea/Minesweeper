@@ -5,19 +5,22 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.externals import joblib
 from sklearn import svm
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.grid_search import GridSearchCV
 import sys
+from sklearn.svm import SVR
+from sklearn import preprocessing
 
 verbose = False
 
-rows = 4
-cols = 4
-bombs = 3
+rows = 5
+cols = 5
+bombs = 5
 
 # use to load data instead of generate
 #X_train = np.load('train_data.npy')
 #Y_train = np.load('train_labels.npy')
 
-X_train, Y_train = minesweeper_ml.generate_global_data(200, rows, cols, bombs, True)
+X_train, Y_train = minesweeper_ml.generate_global_data(1000, rows, cols, bombs, True)
 
 # Pain linear regression
 # model = linear_model.LinearRegression()
@@ -26,17 +29,23 @@ X_train, Y_train = minesweeper_ml.generate_global_data(200, rows, cols, bombs, T
 #model = linear_model.Ridge(alpha = .5)
 
 # Linear regression model with kernel
-model = KernelRidge(alpha=0.5, kernel='rbf')
+# model = KernelRidge(alpha=.3, kernel='rbf')
+
+# model = linear_model.MultiTaskElasticNetCV()
+model = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
+                  param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
+                              "gamma": np.logspace(-2, 2, 5)})
 
 model.fit(X_train, Y_train)
 
-X_test, Y_test = minesweeper_ml.generate_global_data(100, rows, cols, bombs)
+X_test, Y_test = minesweeper_ml.generate_global_data(1000, rows, cols, bombs)
 
 #########################################################################################
 # Play actual games of minesweeper with network acting as agent
 
 gamesWon = 0
-num_games = 250
+num_games = 1000
+games_played = num_games
 total_num_moves = 0
 for i in range(num_games):
 	#needs to be same dimensions as training data
@@ -50,11 +59,11 @@ for i in range(num_games):
 	# Pick the first move to be a corner
 	move = game.get_square((0,0))
 	if game.gameEnd == True:
-		num_games -= 1
+		games_played -= 1
 
     # Update the board with the first move
 	state = np.array(game.get_next_state(move))
-
+	num_moves = 0
 	while not game.gameEnd:
 		# Get next move from agent
 		predictions = model.predict(state)
@@ -91,7 +100,7 @@ for i in range(num_games):
 	total_num_moves += num_moves
 	num_moves = 0
 
-print 'Win rate:', float(gamesWon) / num_games
-print 'Average moves: ', float(total_num_moves)/num_games
+print 'Win rate:', float(gamesWon) / games_played
+print 'Average moves: ', float(total_num_moves)/games_played
 print 'Train accuracy:', model.score(X_train, Y_train)
 print 'Test accuracy:', model.score(X_test, Y_test)

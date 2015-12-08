@@ -271,8 +271,9 @@ def generate_global_data(num_simulations = 10, row=4, column = 4, nbombs= 1, sav
         while not game.gameEnd:
             # add the new state of the board and the label corresponding to 
             # correct next moves to training data set
-            X.append(state)
-            Y.append(label)
+            if state not in X:
+                X.append(state)
+                Y.append(label)
 
             # choose a random next move in frontier that does not lead to a game end
             choices = game.get_frontier()
@@ -328,11 +329,17 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, nbombs= 1, n = 
 
         # Play game to completion
         while not game.gameEnd:
-            choices = game.get_frontier()
-            for choice in choices:
-                x = game.get_area_label(choice, n)
-                X.append(x)
-                Y.append(0 if game.is_bomb(choice) else 1)          
+            if state not in X:
+                choices = game.get_frontier()
+                label = game.get_label()
+                for choice in choices:
+                    x = game.get_area_label(choice, n)
+                    X.append(x)
+                    if label[choice.location[0]*game.row_size +choice.location[1]] == 1:
+                        Y.append(1)
+                    else:
+                        Y.append(0)
+                    # Y.append(0 if game.is_bomb(choice) else 1)          
 
             randomOrdering = random.sample(range(len(choices)), len(choices))
             move = None
