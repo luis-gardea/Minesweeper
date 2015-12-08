@@ -51,6 +51,9 @@ class MineMap(object):
         self.rows = rows
         self.cols = columns
         self.realrules = realrules
+        self.mines = mines
+
+        self.cleared = 0
 
         self.victory = False
         self.finished = False
@@ -142,8 +145,8 @@ class MineMap(object):
             if self.realrules:
     	      # find non-mine
                 while True:
-                    tx = pick(self.cols)
-                    ty = pick(self.rows)
+                    tx = self.pick(self.cols)
+                    ty = self.pick(self.rows)
                     if not self.mine_map[ty][tx] < 0:
                         break
                 # swap
@@ -154,6 +157,8 @@ class MineMap(object):
                 self.finished = True
 
         self.realrules = False
+        if self.mine_map[y][x] != BOOM:
+            self.cleared += 1
         return self.mine_map[y][x]
   
     # returns values depending on the state of cell (x, y)

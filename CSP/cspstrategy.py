@@ -58,7 +58,11 @@ class CSPStrategy(object):
 			print("================ NEW GAME ================")
 
 		# use hint
-		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM:
+		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM and m.realrules:
+			map2 = minemap.MineMap(m.mines,m.rows,m.cols,m.realrules)
+			self.play2(map2,hint_column,hint_row)
+			m.cleared = map2.cleared
+			m.victory = map2.victory
 			return
 
 		# initialize constraints
