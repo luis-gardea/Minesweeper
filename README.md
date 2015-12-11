@@ -3,7 +3,7 @@
 ##This is the code that was utilized for the CS 221/229 project, in which machine learning and AI methods were applied to solve the game of Minesweeper.
 ##Several approaches were used involving logistic regression, linear regression, reinforcement learning/QLearning, and CSPs.
 
-To run the code for the CSP method follow the below steps:
+###CSP method:
 Enter the CSP directory
 	
 	cd CSP/
