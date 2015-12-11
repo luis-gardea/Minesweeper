@@ -59,11 +59,11 @@ class Constraint(object):
 		self.current_constant = 0
 		self.unassigned = 0
 		self.next_unassigned = None
-		for i in range(self.nvariables):
-			if self.variables[i].testAssignment < 0:
-				self.next_unassigned = self.variables[i]
+		for var in self.variables:
+			if var.testAssignment < 0:
+				self.next_unassigned = var
 				self.unassigned += 1
-			elif self.variables[i].testAssignment >= 1:
+			elif var.testAssignment >= 1:
 				self.current_constant += 1
 
 	def isSatisfied(self):
@@ -109,13 +109,13 @@ class Constraint(object):
 		result = []
 		if self.constant == 0:
 	    	# all variables are 0 (no mines)
-			for i in range(self.nvariables):
-				self.variables[i].probe(mapM)
-				result.append(self.variables[i].newConstraint())
+			for var in self.variables:
+				var.probe(mapM)
+				result.append(var.newConstraint())
 		elif self.constant == self.nvariables:
 	    	# all variables are 1 (are mines)
-			for i in range(self.nvariables):
-				self.variables[i].mark(mapM)
+			for var in self.variables:
+				var.mark(mapM)
 		else: 
 			return None
 
@@ -130,16 +130,16 @@ class Constraint(object):
 			return other.simplify(self)
 
 		# Is other a subset of us?
-		for i in range(other.nvariables):
-			for j in range(self.nvariables):
+		for i in range(len(other.variables)):
+			for j in range(len(self.variables)):
 				if self.variables[j] == other.variables[i]:
 					break
-				elif j >= self.nvariables - 1:
+				elif j >= len(self.variables) - 1:
 					return False
 
 		# remove other's variables from this
-		for i in range(other.nvariables):
-			for j in range(self.nvariables):
+		for i in range(len(other.variables)):
+			for j in range(len(self.variables)):
 				if self.variables[j] == other.variables[i]:
 					self.nvariables -=1
 					self.variables.pop(j)
@@ -148,9 +148,9 @@ class Constraint(object):
 		return True
 
 	def coupledWith(self, other):
-		for i in range(other.nvariables):
-			for j in range(self.nvariables):
-				if self.variables[j] == other.variables[i]:
+		for var in other.variables:
+			for var2 in self.variables:
+				if var == var2:
 					return True
 		return False
 

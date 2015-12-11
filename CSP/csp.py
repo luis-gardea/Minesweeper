@@ -79,8 +79,8 @@ class CSPSquare(object):
 			for j in range(self.ny1,self.ny2):
 				if board[i][j].state < MARKED:
 					found = False
-					for k in range(nvariables):
-						if board[i][j] == variables[k]:
+					for var in variables:
+						if board[i][j] == var:
 							found = True
 							break
 					if not found:
@@ -161,7 +161,7 @@ class CSPBoard(object):
 		result = []
 		count = 0
 		board = self.board
-		for x in range(len(board)):
+		for row in range(len(board)):
 			for y in range(len(board[0])):
 				if (board[x][y].state == UNKNOWN and board[x][y].boundary_level == level):
 					count += 1
