@@ -8,11 +8,11 @@ Enter the CSP directory
 	
 	cd CSP/
 
-To run the nongraphical version, run the command
+To run the nongraphical version, run the command (with optional flags)
 	
 	python pgms.py [-r <num rows>] [-c <num cols>] [-m <num mines>] [-n <num games>] [-i for intermediate game] [-e for expert game] [-b for beginner game] [-S <num sets>] [-v verbose] [-noreal can lose on first try]
 
-To run the graphical version, run the command
+To run the graphical version, run the command (also with optional flags)
 	
 	python gui.py [-r <num rows>] [-c <num cols>] [-m <num mines>] [-i for intermediate game] [-e for expert game] [-b for beginner game] [-S <num sets>] [-v verbose] [-noreal can lose on first try]
 
