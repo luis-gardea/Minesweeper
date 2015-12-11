@@ -44,9 +44,9 @@ class SolutionSet(object):
 		self.constraints = constraints
 		self.VERBOSE = cspstrategy.VERBOSE
 
-		self.variables = None
+		self.variables = []
 		self.nodes = []
-		self.nvariables = 0
+		# self.nvariables = 0
 
 		self.min = 0
 		self.max = 0
@@ -57,41 +57,43 @@ class SolutionSet(object):
 		self.largest_nsols = 0
 		self.VERBOSE = False
 	
-	 	for i in range(len(self.constraints)):
-	 		vararray = constraints[i].getVariables()
-	 		for j in range(len(vararray)):
+	 	for constraint in self.constraints:
+	 		vararray = constraint.getVariables()
+	 		for var in vararray:
 	 			found = False
-	 			for k in range(self.nvariables):
-	 				if self.nodes[k].variable == vararray[j]:
-	 					self.nodes[k].addConstraint(constraints[i])
+	 			for node in self.nodes:
+	 				if node.variable == var:
+	 					node.addConstraint(constraint)
 	 					found = True
 	 					break
 	 			if not found:
-	 				self.nodes.append(constraintlist.ConstraintList(self.constraints[i],vararray[j]))
-	 				self.nvariables += 1
-	 		self.min += constraints[i].getConstant()
+		 			self.nodes.append(constraintlist.ConstraintList(constraint,var))
+		 	self.min += constraint.getConstant()
+
 		# Note: we used min here to tally the absolute maximum number of mines
 		# expected because this number is a good initial value for the minimum
 		# mines variables.
 
 		# sort variables in decending order by number of constraints
 		self.nodes = sorted(self.nodes, key = lambda constraintList: len(constraintList.constraints), reverse = True)
-		if len(self.nodes[0].constraints) < len(self.nodes[self.nvariables-1].constraints):
+		if len(self.nodes[0].constraints) < len(self.nodes[-1].constraints):
 			raise Exception('WRONG ORDER!!!')
 
 		# create variables array
 		self.variables = []
-		for i in range(self.nvariables):
-			self.variables.append(self.nodes[i].variable)
+		# for i in range(self.nvariables):
+		# 	self.variables.append(self.nodes[i].variable)
+		for node in self.nodes:
+			self.variables.append(node.variable)
 
 		# create needed arrays
 		self.solutions = [None]*(self.min+1)
 		self.mines = []
 		for i in range(self.min+1):
-			self.mines.append([None]*self.nvariables)
+			self.mines.append([None]*len(self.nodes))
 
 	def getVariableCount(self):
-		return self.nvariables
+		return len(self.variables)
 
 	def getConstraintCount(self):
 		return len(self.constraints)
@@ -130,7 +132,7 @@ class SolutionSet(object):
 		for j in range(self.min, self.max + 1):
 			total_solutions += self.solutions[j]
 		best = total_solutions
-		for i in range(self.nvariables):
+		for i in range(len(self.nodes)):
 			total = 0
 			for j in range(self.min, self.max + 1):
 				total += self.mines[j][i]
@@ -139,22 +141,22 @@ class SolutionSet(object):
 				self.bestProbe = self.variables[i]
 		return best/float(total_solutions)
 
-	def doBestProbe(self, map):
+	def doBestProbe(self, mapM):
 		if self.bestProbe == None:
 			self.findBestProbe()
-		s = self.bestProbe.probe(map)
+		s = self.bestProbe.probe(mapM)
 		return self.bestProbe.newConstraint() if s >= 0 else None
 
 	def doCrapsShoot(self, mapM):
 		if self.min != self.max:
 			return None
-		for i in range(self.nvariables):
-			if not self.variables[i].neighborsKnownOrInSet(self.variables, self.nvariables):
+		for i in range(len(self.nodes)):
+			if not self.variables[i].neighborsKnownOrInSet(self.variables, len(self.nodes)):
 				return None
 		# figure out best choice (and mark for sure mines when found)
 		best = -1
 		bestcount = self.solutions[self.min]
-		for i in range(self.nvariables):
+		for i in range(len(self.nodes)):
 			if self.mines[self.min][i] < bestcount:
 				bestcount = self.mines[self.min][i];
 				best = i
@@ -181,46 +183,45 @@ class SolutionSet(object):
 		total_solutions = 0
 		for j in range(self.min, self.max + 1):
 			total_solutions += self.solutions[j]
-		for i in range(self.nvariables):
+		for i in range(len(self.nodes)):
 			total = 0
 			for j in range(self.min, self.max + 1):
 				total += self.mines[j][i]
 			if total == total_solutions:
 				self.variables[i].mark(mapM)
 
+	# backtracking routine
 	def enumerateSolutions(self):
 		# initialize counters
 		for i in range(len(self.solutions)):
 			self.solutions[i] = 0
-			for j in range(self.nvariables):
+			for j in range(len(self.nodes)):
 				self.mines[i][j] = 0
-		# initialize all variables to unset
-		for i in range(self.nvariables):
-			self.variables[i].testAssignment = -1
+		for var in self.variables:
+			var.testAssignment = -1
 		# index to variable used at each level
 		variableindex = []
-		for i in range(self.nvariables):
+		for i in range(len(self.nodes)):
 			variableindex.append(-1)
 		# last choice of variable by constrainedness
 		lastchoice = -1
-		# initialize constraints
-		for i in range(len(self.constraints)):
-			self.constraints[i].updateVariable(None)
-	
+		for constraint in self.constraints:
+			constraint.updateVariable(None)
+
 		# main loop
 		level = 0
 		while True:
-			if level == self.nvariables:
+			if level == len(self.nodes):
 				# all variables assigned, enumerate solution
 				m = 0
-				for j in range(self.nvariables):
+				for j in range(len(self.nodes)):
 					m += self.variables[j].testAssignment
 				self.solutions[m] += 1
 				if m < self.min: 
 					self.min = m
 				if m > self.max:
 					self.max = m
-				for j in range(self.nvariables):
+				for j in range(len(self.nodes)):
 					self.mines[m][j] += self.variables[j].testAssignment
 				# go up
 				level -= 1
@@ -229,13 +230,13 @@ class SolutionSet(object):
 			if variableindex[level] < 0:
 				# pick next variable
 				var = None
-				for i in range(len(self.constraints)):
+				for constraint in self.constraints:
 					if var != None:
 						break
-					var = self.constraints[i].suggestUnassignedVariable()
+					var = constraint.suggestUnassignedVariable()
 				if var != None:
 					# find suggested variable
-					variableindex[level] = self.nvariables
+					variableindex[level] = len(self.nodes)
 					variableindex[level] -= 1	
 					while var != self.variables[variableindex[level]]:
 						variableindex[level] -= 1
@@ -269,8 +270,8 @@ class SolutionSet(object):
 				break
 
 		# check if this was the largest system solved
-		if self.nvariables - len(self.constraints) > self.largest_nvars - self.largest_neqns:
-			self.largest_nvars = self.nvariables
+		if len(self.nodes) - len(self.constraints) > self.largest_nvars - self.largest_neqns:
+			self.largest_nvars = len(self.nodes)
 			self.largest_neqns = len(self.constraints)
 			self.largest_nsols = 0
 			for solution in self.solutions:
