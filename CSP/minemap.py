@@ -46,7 +46,7 @@ BOOM = -1
 
 class MineMap(object):
   
-    def __init__(self, mines, rows, columns, realrules):
+    def __init__(self, mines, rows, columns, realrules=True):
         self.minesLeft = mines
         self.rows = rows
         self.cols = columns
@@ -57,6 +57,8 @@ class MineMap(object):
 
         self.victory = False
         self.finished = False
+
+        self.moves = []
         
         # mine_map[y][x] = -1, if cell (x, y) contains a mine or
         # the number of mines adjactent to cell (x, y)
@@ -139,6 +141,7 @@ class MineMap(object):
         elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
              return OUT_OF_BOUNDS
         elif self.mark_map[y][x]:
+            self.moves.append((x,y))
             return MARKED
         self.unprobed_map[y][x] = False
         if self.mine_map[y][x] < 0:
@@ -159,6 +162,7 @@ class MineMap(object):
         self.realrules = False
         if self.mine_map[y][x] != BOOM:
             self.cleared += 1
+        self.moves.append((x,y))
         return self.mine_map[y][x]
   
     # returns values depending on the state of cell (x, y)
@@ -179,12 +183,15 @@ class MineMap(object):
         elif x < 0 or x >= self.cols or y < 0 or y >= self.rows:
             return OUT_OF_BOUNDS
         elif self.mark_map[y][x]:
+            self.moves.append((x,y))
             return MARKED
         elif self.unprobed_map[y][x]:
             self.minesLeft -= 1
             self.mark_map[y][x] = True
+            self.moves.append((x,y))
             return MARKED
         else:
+            self.moves.append((x,y))
             return self.mine_map[y][x]
 
     # returns number of mines left

@@ -33,7 +33,7 @@ class CSPStrategy(object):
 	#  * @param m game to play
 	#  */
 	def play1(self, m):
-		self.play2(m, 0, 0)
+		self.play2(m, 0, 0, False)
 
 	# /**
 	#  * Play a hinted game.
@@ -41,8 +41,9 @@ class CSPStrategy(object):
 	#  * @param hint_column x coordinate of hint
 	#  * @param hint_row y coordinate of hint 
 	#  */
-	def play2(self,m, hint_column, hint_row):
+	def play2(self,m, hint_column, hint_row, not_first):
 		self.map = m
+
 
 		# initialize SolutionSet statics
 		solutionset.largest_neqns = 0
@@ -59,7 +60,7 @@ class CSPStrategy(object):
 
 		# use hint
 		if cspboard.board[hint_column][hint_row].probe(self.map) == minemap.BOOM and m.realrules:
-			map2 = minemap.MineMap(m.mines,m.rows,m.cols,m.realrules)
+			map2 = minemap.MineMap(m.mines,m.rows,m.cols,m.realrules, True)
 			self.play2(map2,hint_column,hint_row)
 			m.cleared = map2.cleared
 			m.victory = map2.victory

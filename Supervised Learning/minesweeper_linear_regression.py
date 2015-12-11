@@ -12,15 +12,15 @@ from sklearn import preprocessing
 
 verbose = False
 
-rows = 5
-cols = 5
-bombs = 5
+rows = 4
+cols = 4
+bombs = 6
 
 # use to load data instead of generate
 #X_train = np.load('train_data.npy')
 #Y_train = np.load('train_labels.npy')
 
-X_train, Y_train = minesweeper_ml.generate_global_data(1000, rows, cols, bombs, True)
+X_train, Y_train = minesweeper_ml.generate_global_data(1200, rows, cols, bombs, True)
 
 # Pain linear regression
 # model = linear_model.LinearRegression()

@@ -28,6 +28,7 @@ Boston, MA 02111-1307, USA.
 '''
 
 def main(args):
+	m = None
 	strategy_name = "cspstrategy.CSPStrategy"
 	game_name = 'intermediate'
 	mines = 40
@@ -35,7 +36,7 @@ def main(args):
 	cols = 16
 	hinted = False
 	realrules = True
-	trys = 1
+	tries = 1
 	sets = 1
 	module = __import__(strategy_name.split('.')[0])
 
@@ -91,7 +92,7 @@ def main(args):
 			if i+1 >= len(args):
 				raise Exception("Wrong input")
 			else:
-				trys = int(args[i+1])
+				tries = int(args[i+1])
 				cont = True
 		elif args[i] == '-S':
 			if i+1 >= len(args):
@@ -109,9 +110,6 @@ def main(args):
 	if rows < 1 or cols < 1 or mines < 1 or mines >= rows*cols:
 		raise Exception("Wrong input")
 
-	
-	
-
 	sumN = 0.0
 	sumsqr = 0.0
 	numCleared = 0.0
@@ -120,9 +118,10 @@ def main(args):
 	for seti in range(1,sets+1):
 
 		wins = 0
-		for n in range(1,trys+1):
+		for n in range(1,tries+1):
 			s = getattr(module,strategy_name.split('.')[1])()
 			m = minemap.MineMap(mines,rows,cols,realrules)
+			
 			if not hinted:
 				s.play1(m)
 			else:
@@ -140,18 +139,12 @@ def main(args):
 		sumsqr += wins**2
 
 	print str(rows), "by", str(cols),"board with", str(mines),"mines"
-	print "In %s sets of %s tries (%s) games total:" % (sets,trys,sets*trys)
+	print "In %s sets of %s tries (%s) games total:" % (sets,tries,sets*tries)
 	mean = sumN / sets
-	print " Mean wins: %s/%s (%s%%)" % (int(mean), trys, 100.0*mean/trys )
+	print " Mean wins: %s/%s (%s%%)" % (int(mean), tries, 100.0*mean/tries )
 	print " Mean %% of board cleared: %s/%s (%s%%)" % (int(numCleared),int(numTotal),100*numCleared/numTotal)
 	
-
+	
 if __name__ == "__main__":
-    # main(sys.argv[1:])
-    main("-n 10000 -m 23 -r 12 -c 12".split())
-    main("-n 10000 -m 63 -r 20 -c 20".split())
-    main("-n 10000 -m 123 -r 28 -c 28".split())
-    
+    main(sys.argv[1:])
 
-
-		
