@@ -3,10 +3,35 @@
 ##This is the code that was utilized for the CS 221/229 project, in which machine learning and AI methods were applied to solve the game of Minesweeper.
 ##Several approaches were used involving logistic regression, linear regression, reinforcement learning/QLearning, and CSPs.
 
+###Supervised Learning methods:
+Enter the Supervised directory
+	
+	cd Supervised/
+
+To run the logistic regression classifier, run the command
+
+	python logreg_classification.py
+
+To run the SVM  classifier, run the command
+
+	python SVM_classification.py
+
+To run the regression predictor, run the command
+
+	python regression.py
+
+Tuneable parameters within the files: 
+
+	rows
+	cols
+	bombs
+	train_games (how many games of Minesweeper to use during training)
+	area (for classification only. Controls how much of the board to use as features for the classifiers)
+
 ###Q-Learning method:
 Enter the Q-Learning directory
 
-	cd Qlearning
+	cd Qlearning/
 
 Run the following command:
 

@@ -59,6 +59,11 @@ class MineSweeper(object):
         self.score = 0
         self.gameWon = False
 
+        self.edge_squares = []
+        self.corner_squares = []
+
+        self.numUncovered = 0
+
         spaces = set((x,y) for x in range(self.row_size) for y in range(self.column_size))
         self.solver = mines.Solver(spaces)
         info = mines.Information(frozenset(spaces), self.bomb_number)
@@ -68,6 +73,16 @@ class MineSweeper(object):
             self.board.append([])
             for col in range(self.column_size):
                 self.board[row].append(Square((row, col)))
+                if row == 0 or col == 0 or row == self.row_size-1 or col == self.column_size-1:
+                    self.edge_squares.append(self.board[row][col])
+
+        for row in [0, self.row_size-1]:
+            for col in [0, self.column_size-1]:
+                #print row, col
+                self.edge_squares.remove(self.board[row][col])
+                self.corner_squares.append(self.board[row][col])
+        #print self.board[3][0] in self.edge_squares
+        #print self.corner_squares
 
         self.insert_mines()
 
@@ -137,6 +152,8 @@ class MineSweeper(object):
 
         # uncover current square
         square.isUncovered = True
+        self.numUncovered += 1
+        
         self.solver.add_known_value(square.location, 0)
         self.num_uncovered += 1
 
@@ -165,6 +182,26 @@ class MineSweeper(object):
 
         return state
 
+    def get_classifier_label(self):
+        label = [0 for x in range(self.row_size) for y in range(self.column_size)]
+        try:
+            self.solver.solve()
+        except mines.UnsolveableException:
+            print "This configuration has no solutions."
+            sys.exit(0)
+        forsure = self.solver.solved_spaces
+        if len(forsure) != 0:
+            loc = forsure[0]
+            pos = loc[0]*self.row_size + loc[1]
+            label[pos] = 1 - value
+        probabilities, total = self.solver.get_probabilities()
+        for loc, prob in probabilities.iteritems():
+            pos = loc[0]*self.row_size + loc[1]
+            label[pos] = 1.0 - float(prob)/total
+
+        return label
+
+
     def get_area_label(self, square, n):
         location = square.location
         label = [self.offboard_value]*((2*n+1)**2 - 1)
@@ -178,6 +215,22 @@ class MineSweeper(object):
 
                     label[i] = neighbor.value if neighbor.isUncovered else self.covered_value
                 i = i+1
+
+        return label
+
+    def get_area_label1(self, square, n = 1):
+        location = square.location
+        label = []
+        i = 0
+        for row in range(location[0]-n, location[0]+n+1):
+            for col in range(location[1]-n, location[1]+n+1):
+                if row == location[0] and col == location[1]:
+                    continue
+                if row >= 0 and row < self.row_size and col >= 0 and col < self.column_size:
+                    neighbor = self.get_square((row, col))
+
+                    label.append(neighbor.value if neighbor.isUncovered else self.covered_value)
+
 
         return label
 
@@ -246,7 +299,7 @@ class MineSweeper(object):
 
 
 
-def generate_global_data(num_simulations = 10, row=4, column = 4, nbombs= 1, save_data = False):
+def generate_global_data(num_simulations = 10, row=4, column = 4, nbombs= 1, save_data = False, test = 0, train = []):
     X = []
     Y = []
 
@@ -271,7 +324,7 @@ def generate_global_data(num_simulations = 10, row=4, column = 4, nbombs= 1, sav
         while not game.gameEnd:
             # add the new state of the board and the label corresponding to 
             # correct next moves to training data set
-            if state not in X:
+            if state not in X or (test and state not in train):
                 X.append(state)
                 Y.append(label)
 
@@ -304,10 +357,7 @@ def generate_global_data(num_simulations = 10, row=4, column = 4, nbombs= 1, sav
 
     return X, Y
 
-
-
-
-def generate_local_data(num_simulations = 10, row=4, column = 4, nbombs= 1, n = 1, save_data = False):
+def generate_local_data(num_simulations = 10, row=4, column = 4, nbombs= 1, n = 1, save_data = False, test = 0, train = []):
     X = []
     Y = []
 
@@ -329,7 +379,7 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, nbombs= 1, n = 
 
         # Play game to completion
         while not game.gameEnd:
-            if state not in X:
+            if state not in X or (test and state not in train):
                 choices = game.get_frontier()
                 label = game.get_label()
                 for choice in choices:
@@ -340,13 +390,19 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, nbombs= 1, n = 
                     else:
                         Y.append(0)
                     # Y.append(0 if game.is_bomb(choice) else 1)          
+            if random.random() < .8:
+                randomOrdering = random.sample(range(len(choices)), len(choices))
+                for choice in randomOrdering:
+                    move = choices[choice]
+                    if not game.is_bomb(move) and not move.isUncovered:
+                        break
+            else:
+                randomOrdering = random.sample([(x,y) for x in range(game.row_size) for y in range(game.column_size)], game.row_size*game.column_size-1)
+                for choice in randomOrdering:
+                    move = game.get_square(choice)
+                    if not game.is_bomb(move) and not move.isUncovered:
+                        break
 
-            randomOrdering = random.sample(range(len(choices)), len(choices))
-            move = None
-            for choice in randomOrdering:
-                move = choices[choice]
-                if not game.is_bomb(move):
-                    break
 
             # If there are no valid moves in the frontier, choose a random move from the entire board
             if game.is_bomb(move):

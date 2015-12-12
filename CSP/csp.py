@@ -161,7 +161,7 @@ class CSPBoard(object):
 		result = []
 		count = 0
 		board = self.board
-		for row in range(len(board)):
+		for x in range(len(board)):
 			for y in range(len(board[0])):
 				if (board[x][y].state == UNKNOWN and board[x][y].boundary_level == level):
 					count += 1
