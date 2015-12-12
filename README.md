@@ -3,6 +3,17 @@
 ##This is the code that was utilized for the CS 221/229 project, in which machine learning and AI methods were applied to solve the game of Minesweeper.
 ##Several approaches were used involving logistic regression, linear regression, reinforcement learning/QLearning, and CSPs.
 
+###Q-Learning method:
+Enter the Q-Learning directory
+
+	cd Qlearning
+
+Run the following command:
+
+	python minesweeper_qlearning.py [-r <num rows>] [-c <num cols>] [-l <num training games>] [-p <num testing games>] [-q print state map]
+
+Default values are 4x4 board, with 100,000 training games and 10,000 testing games.
+
 ###CSP method:
 Enter the CSP directory
 	

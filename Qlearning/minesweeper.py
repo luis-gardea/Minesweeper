@@ -74,9 +74,9 @@ class MineSweeper(object):
         if difficulty == 1:
             if row * column < 10:
                 self.bomb_number = 2
-            if row*column < 20:
+            elif row*column < 20:
                 self.bomb_number = 3
-            if row * column < 30:           
+            elif row * column < 30:           
                 self.bomb_number = 5                        
             elif row * column < 100:
                 self.bomb_number = 10           
@@ -119,7 +119,6 @@ class MineSweeper(object):
                     state.append(self.covered_value)
                 else:
                     state.append(square.value)
-        #print state
         return state
 
     # returns a vector of the state if the board were rotated 90 degrees clockwise. To
@@ -300,6 +299,12 @@ class MineSweeper(object):
     def get_square(self, location):
         return self.board[location[0]][location[1]]
 
+    def get_random_move_off_frontier(self):
+        randomLocation = (randint(0, self.row_size-1), randint(0, self.column_size-1))
+        while randomLocation in self.get_frontier() or self.get_square(randomLocation).isUncovered:
+            randomLocation = (randint(0, self.row_size-1), randint(0, self.column_size-1))
+        return self.get_square(randomLocation)
+
 def generate_global_data(num_simulations = 10, row=4, column = 4, difficulty= 1, save_data = False):
     X = []
     Y = []
@@ -418,7 +423,7 @@ def generate_local_data(num_simulations = 10, row=4, column = 4, difficulty= 1, 
 # Generates a map containing estimated q values for each (state, action) pair,
 # where the action is the location of the next move. Generates this by playing
 # random moves from the frontier, and recording whether or not they result in
-# finding a mine.
+# finding a mine. NOT USED SINCE IT IS LESS EFFICIENT.
 def generate_state_map_by_random_playing(num_total_simulations=100, row=4, col=4, difficulty=1, rewardValue=1):
 
     qMap = collections.Counter()
@@ -433,10 +438,8 @@ def generate_state_map_by_random_playing(num_total_simulations=100, row=4, col=4
 
         while True:
             reward = rewardValue if not game.is_bomb(nextMove) else -1*rewardValue
-            #print nextMove.location, "reward: ", reward
             stateAndAction = (tuple(currentState), nextMove.location)
             qMap[stateAndAction] += reward
-            #print qMap
             currentState = game.get_next_state(nextMove)
 
             if game.gameEnd:
@@ -451,67 +454,60 @@ def generate_state_map_by_random_playing(num_total_simulations=100, row=4, col=4
 # where the action is the location of the next move. Generates this by picking
 # a random move from the frontier, then by inputting all correct moves into the 
 # map. Picks a random correct move and repeats. Performs better than the alternative
-# using random playing, presumably because it gathers more data.
+# using random playing because it gathers more data.
 def generate_state_map_using_label(num_total_simulations=100, row=4, col=4, difficulty=1, reward=1):
     qMap = collections.Counter()
 
-    cantWin = 0
     for iterationNo in xrange(num_total_simulations):
         if iterationNo % 1000 == 0:
-            print "Iteration number: ", iterationNo
+            print "Playing %dth training game." % iterationNo
         game = MineSweeper(row, col, difficulty)
 
-        location = (randint(0, game.row_size-1), randint(0, game.column_size-1))
-        nextMove = game.get_square(location)
-        currentState = game.get_next_state(nextMove)
+        topLeftCorner = (0, 0)
+        nextMove = game.get_square(topLeftCorner)
+        currentState = tuple(game.get_next_state(nextMove))
 
         while not game.gameEnd:
-            label = game.get_label()
-            currentState = game.get_state()
-            listOfCorrectMoveIndexes = []
+            label = game.get_label()    # get list of correct moves
+            listOfCorrectMoveIndices = []
+            qMap[currentState] += 1     # to indicate that the algorithm has visited this state once 
             for j in range(len(label)):
-                stateAndAction = (tuple(currentState), game.get_location_from_state_index(j))
+                stateAndAction = (currentState, game.get_location_from_state_index(j))
                 if label[j] == 1:
                     qMap[stateAndAction] += reward
-                    listOfCorrectMoveIndexes.append(j)
+                    listOfCorrectMoveIndices.append(j)
 
-            if not listOfCorrectMoveIndexes:
-                cantWin += 1
-                break
+            nextMove = None
 
-            index = random.choice(listOfCorrectMoveIndexes)
-            randomCorrectLocation = game.get_location_from_state_index(index)
-            nextMove = game.get_square(randomCorrectLocation)
-            currentState = game.get_next_state(nextMove)
+            if not listOfCorrectMoveIndices:
+                nextMove = game.get_random_move_off_frontier()
+            else:
+                index = random.choice(listOfCorrectMoveIndices)
+                randomCorrectLocation = game.get_location_from_state_index(index)
+                nextMove = game.get_square(randomCorrectLocation)
+            
+            currentState = tuple(game.get_next_state(nextMove))
 
-    print "Fraction of games lost due to looking only on frontier", (float(cantWin)/num_total_simulations)
     return qMap
 
+# Returns the square of the best move
 def getNextMove(qMap, game):
     bestMoveLocation = (-1, -1)
     maxQValue = float("-inf")
-
     possibleMoves = map(lambda x: x.location, game.get_frontier())
-    # print possibleMoves
-    stateAsTuple = tuple(game.get_state())
-    undiscovered = 0
-    discovered = 0
+    currentState = tuple(game.get_state())
+    shouldPickRandomMove = True
+    
     for move in possibleMoves:
-        stateAndAction = (stateAsTuple, move)
-        if stateAndAction not in qMap:
-            #print "Undiscovered state"
-            undiscovered += 1
-        else:
-            discovered += 1
-
-        q = qMap[(stateAsTuple, move)]
-        # print "Move: ", move
-        # print "Q value: ", q
-        # print ""
+        q = qMap[ (currentState, move) ]
         if q > maxQValue:
             bestMoveLocation, maxQValue = move, q
 
-    print "Undiscovered pairs: ", undiscovered
-    print "Discovered pairs: ", discovered
-    print ""
-    return game.get_square(bestMoveLocation)
+    if maxQValue > 0 or qMap[currentState] == 0:
+        shouldPickRandomMove = False
+
+    if shouldPickRandomMove:
+        return game.get_random_move_off_frontier()
+
+    else:
+        return game.get_square(bestMoveLocation)
