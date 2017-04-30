@@ -1,9 +1,9 @@
 # Minesweeper 
 
-##This is the code that was utilized for the CS 221/229 project, in which machine learning and AI methods were applied to solve the game of Minesweeper.
-##Several approaches were used involving logistic regression, linear regression, reinforcement learning/QLearning, and CSPs.
+## This is the code that was utilized for the CS 221/229 project, in which machine learning and AI methods were applied to solve the game of Minesweeper.
+## Several approaches were used involving logistic regression, linear regression, reinforcement learning/QLearning, and CSPs.
 
-###Supervised Learning methods:
+### Supervised Learning methods:
 Enter the Supervised directory
 	
 	cd Supervised/
@@ -28,7 +28,7 @@ Tuneable parameters within the files:
 	train_games (how many games of Minesweeper to use during training)
 	area (for classification only. Controls how much of the board to use as features for the classifiers)
 
-###Q-Learning method:
+### Q-Learning method:
 Enter the Q-Learning directory
 
 	cd Qlearning/
@@ -39,7 +39,7 @@ Run the following command:
 
 Default values are 4x4 board, with 100,000 training games and 10,000 testing games.
 
-###CSP method:
+### CSP method:
 Enter the CSP directory
 	
 	cd CSP/
